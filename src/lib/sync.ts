@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { getState, setState } from './store'
-import type { Entry, Food, Profile } from './types'
+import { getState, setState, type State } from './store'
+import type { Profile } from './types'
 
 const CONF_KEY = 'kcalculator:supabase'
 
@@ -61,6 +61,10 @@ async function fetchSince(sb: SupabaseClient, table: string, since: string) {
   }
 }
 
+// Tables synchronisées ligne par ligne : même nom côté appli et côté Supabase.
+const TABLES = ['foods', 'entries', 'menus'] as const
+type Row = { id: string; updated_at: string; deleted?: boolean }
+
 /** Envoie les changements locaux puis récupère ceux des autres appareils (le plus récent gagne). */
 export async function sync(): Promise<string> {
   const sb = supabase()
@@ -73,22 +77,15 @@ export async function sync(): Promise<string> {
   try {
     const start = new Date().toISOString()
     const s = getState()
+    const uid = user.id
 
     // 1. Envoi
-    const foods = s.dirty.foods.map((id) => s.foods[id]).filter(Boolean)
-    const entries = s.dirty.entries.map((id) => s.entries[id]).filter(Boolean)
-    const uid = user.id
-    for (let i = 0; i < foods.length; i += 500) {
-      const { error } = await sb
-        .from('foods')
-        .upsert(foods.slice(i, i + 500).map((f) => ({ ...f, deleted: !!f.deleted, user_id: uid })), { onConflict: 'user_id,id' })
-      if (error) throw error
-    }
-    for (let i = 0; i < entries.length; i += 500) {
-      const { error } = await sb
-        .from('entries')
-        .upsert(entries.slice(i, i + 500).map((e) => ({ ...e, deleted: !!e.deleted, user_id: uid })), { onConflict: 'user_id,id' })
-      if (error) throw error
+    for (const t of TABLES) {
+      const rows = (s.dirty[t].map((id) => s[t][id]).filter(Boolean) as Row[]).map((r) => ({ ...r, deleted: !!r.deleted, user_id: uid }))
+      for (let i = 0; i < rows.length; i += 500) {
+        const { error } = await sb.from(t).upsert(rows.slice(i, i + 500), { onConflict: 'user_id,id' })
+        if (error) throw error
+      }
     }
     if (s.dirty.profile) {
       const remote = await sb.from('profiles').select('updated_at').eq('user_id', uid).maybeSingle()
@@ -101,9 +98,8 @@ export async function sync(): Promise<string> {
 
     // 2. Réception
     const since = s.lastSync ?? '1970-01-01T00:00:00Z'
-    const [rfData, reData, rp] = await Promise.all([
-      fetchSince(sb, 'foods', since),
-      fetchSince(sb, 'entries', since),
+    const [pulled, rp] = await Promise.all([
+      Promise.all(TABLES.map((t) => fetchSince(sb, t, since))),
       sb.from('profiles').select('*').eq('user_id', uid).maybeSingle(),
     ])
     if (rp.error) throw rp.error
@@ -112,35 +108,35 @@ export async function sync(): Promise<string> {
     const cur = getState()
     // Le repère de synchro vient de l'horloge du serveur, pas de celle de l'appareil.
     let mark = s.lastSync
-    const seen = (t: string) => {
-      if (!mark || t > mark) mark = t
-    }
-    const nextFoods = { ...cur.foods }
-    for (const row of rfData as (Food & { user_id: string; synced_at: string })[]) {
-      const { user_id: _u, synced_at, ...f } = row
-      seen(synced_at)
-      if (newer(nextFoods[f.id], f)) nextFoods[f.id] = f
-    }
-    const nextEntries = { ...cur.entries }
-    for (const row of reData as (Entry & { user_id: string; synced_at: string })[]) {
-      const { user_id: _u, synced_at, ...e } = row
-      seen(synced_at)
-      if (newer(nextEntries[e.id], e)) nextEntries[e.id] = e
-    }
+    const merged = {} as Record<(typeof TABLES)[number], Record<string, Row>>
+    TABLES.forEach((t, i) => {
+      const next: Record<string, Row> = { ...(cur[t] as Record<string, Row>) }
+      for (const raw of pulled[i] as (Row & { user_id: string; synced_at: string })[]) {
+        const { user_id: _u, synced_at, ...row } = raw
+        if (!mark || synced_at > mark) mark = synced_at
+        if (newer(next[row.id], row)) next[row.id] = row
+      }
+      merged[t] = next
+    })
     let profile = cur.profile
     const rprof = rp.data as { data: Profile } | null
     if (rprof && rprof.data.updated_at > profile.updated_at) profile = rprof.data
 
     // On ne garde « à envoyer » que ce qui a changé après le début de la synchro.
-    const sent = new Set([...s.dirty.foods, ...s.dirty.entries])
+    const stillDirty = (t: (typeof TABLES)[number]) => {
+      const sent = new Set(s.dirty[t])
+      return cur.dirty[t].filter((id) => !sent.has(id) || (cur[t] as Record<string, Row>)[id]?.updated_at > start)
+    }
     setState({
       ...cur,
-      foods: nextFoods,
-      entries: nextEntries,
+      foods: merged.foods as State['foods'],
+      entries: merged.entries as State['entries'],
+      menus: merged.menus as State['menus'],
       profile,
       dirty: {
-        foods: cur.dirty.foods.filter((id) => !sent.has(id) || cur.foods[id]?.updated_at > start),
-        entries: cur.dirty.entries.filter((id) => !sent.has(id) || cur.entries[id]?.updated_at > start),
+        foods: stillDirty('foods'),
+        entries: stillDirty('entries'),
+        menus: stillDirty('menus'),
         profile: cur.profile.updated_at > start,
       },
       lastSync: mark,

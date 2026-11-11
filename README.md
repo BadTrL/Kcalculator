@@ -6,6 +6,7 @@ Fonctionne sur téléphone et sur PC (appli web installable), hors ligne, avec s
 ## Ce que fait l'appli
 
 - **Journal** : repas du jour (Matin, Midi, Collation, Soir), total kcal et macros, avec la progression vers ton objectif.
+- **Mes menus** : tes repas déjà calculés, enregistrés pour les réutiliser. Dans le Journal, « Enregistrer comme menu » sauvegarde un repas rempli, et « + Menu » l'ajoute en un clic.
 - **Aliments** : ta base d'aliments (tes 88 aliments de l'Excel sont déjà importés). Valeurs pour 100 g, 100 ml ou pour 1 unité.
 - **Scan de code-barres** avec la caméra : l'appli récupère les valeurs sur Open Food Facts, tu vérifies et tu enregistres.
 - **Profil** : même calcul que ton fichier Excel. Katch-McArdle (370 + 21,6 × masse maigre) × activité, objectif sèche / maintien / prise de masse arrondi à 50 kcal, protéines et lipides en g/kg de masse maigre, glucides sur le reste.
@@ -59,7 +60,7 @@ src/lib/calc.ts        calculs (métabolisme, objectifs, macros)
 src/lib/store.ts       données locales
 src/lib/sync.ts        synchro Supabase
 src/lib/off.ts         recherche Open Food Facts
-src/components/        écrans (Journal, Aliments, Profil, Réglages, scanner)
+src/components/        écrans (Journal, Mes menus, Aliments, Profil, Réglages, scanner)
 src/data/seedFoods.json  aliments importés de l'Excel
 supabase/schema.sql    tables et règles d'accès
 ```

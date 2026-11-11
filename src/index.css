@@ -175,3 +175,17 @@ form .macros { justify-content: flex-start; margin: 8px 0; font-size: 1.05rem; }
 }
 .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .scan-video { width: 100%; border-radius: 12px; background: #000; aspect-ratio: 4 / 3; object-fit: cover; }
+
+/* Menus */
+.meal-actions { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
+.meal-actions .save-menu { margin-left: auto; color: var(--muted); font-size: 0.85rem; }
+.menu-card { display: flex; align-items: center; gap: 12px; }
+.menu-card-body { flex: 1; min-width: 0; cursor: pointer; }
+.menu-card-body h3 { margin: 0 0 2px; }
+.menu-card-body p { margin: 0 0 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-card-body .macros { justify-content: flex-start; }
+.menu-card > button { flex: none; }
+.menu-total { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 12px; margin-top: 8px; background: var(--accent-soft); border-radius: 10px; font-weight: 600; }
+.list.pick li .macros { justify-content: flex-start; }
+.empty p { margin: 0 0 4px; }
+.seg { flex-wrap: wrap; }

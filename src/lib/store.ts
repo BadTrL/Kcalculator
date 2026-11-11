@@ -1,6 +1,6 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import seed from '../data/seedFoods.json'
-import type { Entry, Food, Profile, Unit } from './types'
+import type { Entry, Food, Meal, Menu, MenuItem, Profile, Unit } from './types'
 
 /**
  * Stockage local d'abord : tout est enregistré sur l'appareil (localStorage),
@@ -11,8 +11,9 @@ import type { Entry, Food, Profile, Unit } from './types'
 export interface State {
   foods: Record<string, Food>
   entries: Record<string, Entry>
+  menus: Record<string, Menu>
   profile: Profile
-  dirty: { foods: string[]; entries: string[]; profile: boolean }
+  dirty: { foods: string[]; entries: string[]; menus: string[]; profile: boolean }
   lastSync: string | null
 }
 
@@ -54,8 +55,9 @@ function initial(): State {
   return {
     foods,
     entries: {},
+    menus: {},
     profile: defaultProfile,
-    dirty: { foods: Object.keys(foods), entries: [], profile: true },
+    dirty: { foods: Object.keys(foods), entries: [], menus: [], profile: true },
     lastSync: null,
   }
 }
@@ -63,7 +65,12 @@ function initial(): State {
 function load(): State {
   try {
     const raw = localStorage.getItem(KEY)
-    if (raw) return { ...initial(), ...JSON.parse(raw) }
+    if (raw) {
+      const base = initial()
+      const saved = JSON.parse(raw) as Partial<State>
+      // Les anciennes sauvegardes n'ont pas forcément tous les champs (ex. menus).
+      return { ...base, ...saved, dirty: { ...base.dirty, menus: [], ...saved.dirty } }
+    }
   } catch {
     /* stockage indisponible : on repart des valeurs par défaut */
   }
@@ -139,6 +146,42 @@ export function deleteEntry(id: string) {
 
 export function saveProfile(p: Omit<Profile, 'updated_at'>) {
   setState({ ...state, profile: { ...p, updated_at: now() }, dirty: { ...state.dirty, profile: true } })
+}
+
+export function saveMenu(menu: Omit<Menu, 'updated_at'>) {
+  const m: Menu = { ...menu, updated_at: now() }
+  setState({
+    ...state,
+    menus: { ...state.menus, [m.id]: m },
+    dirty: { ...state.dirty, menus: uniq([...state.dirty.menus, m.id]) },
+  })
+  return m
+}
+
+export function deleteMenu(id: string) {
+  const m = state.menus[id]
+  if (m) saveMenu({ ...m, deleted: true })
+}
+
+/** Ajoute tous les aliments d'un menu au repas choisi du journal. */
+export function addItemsToDay(items: MenuItem[], date: string, meal: Meal) {
+  const t = now()
+  const entries = { ...state.entries }
+  const ids: string[] = []
+  for (const it of items) {
+    if (!state.foods[it.food_id] || state.foods[it.food_id].deleted) continue
+    const id = newId()
+    entries[id] = { id, date, meal, food_id: it.food_id, qty: it.qty, updated_at: t }
+    ids.push(id)
+  }
+  setState({ ...state, entries, dirty: { ...state.dirty, entries: uniq([...state.dirty.entries, ...ids]) } })
+  return ids.length
+}
+
+export function activeMenus(s: State) {
+  return Object.values(s.menus)
+    .filter((m) => !m.deleted)
+    .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))
 }
 
 export function activeFoods(s: State) {

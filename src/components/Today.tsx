@@ -1,15 +1,11 @@
 import { useMemo, useState } from 'react'
 import { macrosFor, sum, targets } from '../lib/calc'
-import { deleteEntry, newId, saveEntry, useStore } from '../lib/store'
-import { MEALS, type Entry, type Food, type Macros, type Meal } from '../lib/types'
-import { FoodForm, type FoodDraft } from './FoodForm'
-import { useBarcodeFlow, useFoodSearch } from './Foods'
-import { LazyScanner as Scanner } from './LazyScanner'
+import { activeMenus, addItemsToDay, deleteEntry, newId, saveEntry, useStore } from '../lib/store'
+import { MEALS, type Entry, type Food, type Macros, type Meal, type Menu } from '../lib/types'
+import { FoodPicker } from './FoodPicker'
+import { iso } from '../lib/date'
+import { MacroLine, MenuEditor, useMenuTotals } from './Menus'
 
-const iso = (d: Date) => {
-  const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-  return z.toISOString().slice(0, 10)
-}
 const r = (x: number) => Math.round(x)
 const qtyUnit = (f: Food) => (f.unit === 'u' ? 'u' : f.unit)
 
@@ -51,107 +47,55 @@ function Summary({ total, target }: { total: Macros; target: Macros }) {
   )
 }
 
-/** Ajout ou modification d'une ligne de repas : choix de l'aliment puis quantité. */
 function AddEntry({ meal, date, entry, onClose }: { meal: Meal; date: string; entry?: Entry; onClose: () => void }) {
   const foods = useStore((s) => s.foods)
-  const [food, setFood] = useState<Food | null>(entry ? foods[entry.food_id] ?? null : null)
-  const [qty, setQty] = useState(entry ? String(entry.qty) : '')
-  const [q, setQ] = useState('')
-  const [scan, setScan] = useState(false)
-  const [draft, setDraft] = useState<FoodDraft | null>(null)
-  const list = useFoodSearch(q)
-  const pick = (f: Food) => {
-    setFood(f)
-    setQty(entry ? qty : f.unit === 'u' ? '1' : '100')
-  }
-  const onBarcode = useBarcodeFlow(pick, setDraft)
-  const n = parseFloat(qty.replace(',', '.')) || 0
-  const m = food ? macrosFor(food, n) : null
-
   return (
-    <div className="modal" role="dialog" aria-label="Ajouter un aliment">
+    <FoodPicker
+      title={`${entry ? 'Modifier' : 'Ajouter'} · ${meal}`}
+      food={entry ? foods[entry.food_id] ?? null : null}
+      qty={entry?.qty}
+      submitLabel={entry ? 'Enregistrer' : 'Ajouter'}
+      onSubmit={(food, qty) => saveEntry({ id: entry?.id ?? newId(), date, meal, food_id: food.id, qty })}
+      onRemove={entry ? () => deleteEntry(entry.id) : undefined}
+      onClose={onClose}
+    />
+  )
+}
+
+function MenuOption({ menu, onPick }: { menu: Menu; onPick: () => void }) {
+  const total = useMenuTotals(menu.items)
+  return (
+    <li onClick={onPick} tabIndex={0} onKeyDown={(k) => k.key === 'Enter' && onPick()}>
+      <strong>{menu.name}</strong>
+      <MacroLine m={total} />
+    </li>
+  )
+}
+
+/** Ajoute un menu enregistré à un repas du jour. */
+function MenuChooser({ meal, date, onClose }: { meal: Meal; date: string; onClose: () => void }) {
+  const menus = useStore(activeMenus)
+  return (
+    <div className="modal" role="dialog" aria-label="Ajouter un menu">
       <div className="sheet">
         <div className="sheet-head">
-          <h2>{entry ? 'Modifier' : 'Ajouter'} · {meal}</h2>
+          <h2>Ajouter un menu · {meal}</h2>
           <button className="ghost" onClick={onClose} aria-label="Fermer">✕</button>
         </div>
-        {!food ? (
-          <>
-            <div className="toolbar">
-              <input autoFocus type="search" placeholder="Rechercher un aliment" value={q} onChange={(e) => setQ(e.target.value)} />
-              <button className="secondary" onClick={() => setScan(true)} aria-label="Scanner">📷</button>
-            </div>
-            <ul className="list pick">
-              {list.slice(0, 60).map((f) => (
-                <li key={f.id} onClick={() => pick(f)} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && pick(f)}>
-                  <strong>{f.name}</strong>
-                  <span className="muted small">{r(f.kcal)} kcal {f.unit === 'u' ? '/ u' : `/ 100 ${f.unit}`}</span>
-                </li>
-              ))}
-              <li className="add" onClick={() => setDraft({ name: q })}>+ Créer « {q || 'nouvel aliment'} »</li>
-            </ul>
-          </>
-        ) : (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (n <= 0) return
-              saveEntry({ id: entry?.id ?? newId(), date, meal, food_id: food.id, qty: n })
-              onClose()
-            }}
-          >
-            <p className="picked">
-              <strong>{food.name}</strong>
-              {!entry && <button type="button" className="ghost small" onClick={() => setFood(null)}>changer</button>}
-            </p>
-            <label>
-              Quantité ({food.unit === 'u' ? 'unités' : food.unit})
-              <input autoFocus inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} />
-            </label>
-            {m && (
-              <div className="macros">
-                <span className="kcal">{r(m.kcal)} kcal</span>
-                <span className="p">P {r(m.protein)} g</span>
-                <span className="c">G {r(m.carbs)} g</span>
-                <span className="f">L {r(m.fat)} g</span>
-              </div>
-            )}
-            <div className="row end">
-              {entry && (
-                <button
-                  type="button"
-                  className="danger"
-                  onClick={() => {
-                    deleteEntry(entry.id)
-                    onClose()
-                  }}
-                >
-                  Retirer
-                </button>
-              )}
-              <button type="submit">{entry ? 'Enregistrer' : 'Ajouter'}</button>
-            </div>
-          </form>
-        )}
+        <ul className="list pick">
+          {menus.map((m) => (
+            <MenuOption
+              key={m.id}
+              menu={m}
+              onPick={() => {
+                addItemsToDay(m.items, date, meal)
+                onClose()
+              }}
+            />
+          ))}
+          {menus.length === 0 && <li className="muted">Aucun menu enregistré. Remplis un repas puis utilise « Enregistrer comme menu ».</li>}
+        </ul>
       </div>
-      {scan && (
-        <Scanner
-          onResult={(c) => {
-            setScan(false)
-            onBarcode(c)
-          }}
-          onClose={() => setScan(false)}
-        />
-      )}
-      {draft && (
-        <FoodForm
-          initial={draft}
-          onClose={(saved) => {
-            setDraft(null)
-            if (saved) pick(saved)
-          }}
-        />
-      )}
     </div>
   )
 }
@@ -159,6 +103,9 @@ function AddEntry({ meal, date, entry, onClose }: { meal: Meal; date: string; en
 export function Today() {
   const [date, setDate] = useState(() => iso(new Date()))
   const [adding, setAdding] = useState<{ meal: Meal; entry?: Entry } | null>(null)
+  const [choosing, setChoosing] = useState<Meal | null>(null)
+  const [saving, setSaving] = useState<Partial<Menu> | null>(null)
+  const [msg, setMsg] = useState<string | null>(null)
   const entries = useStore((s) => s.entries)
   const foods = useStore((s) => s.foods)
   const profile = useStore((s) => s.profile)
@@ -217,10 +164,32 @@ export function Today() {
                 </li>
               ))}
             </ul>
-            <button className="ghost add-line" onClick={() => setAdding({ meal })}>+ Ajouter un aliment</button>
+            <div className="meal-actions">
+              <button className="ghost add-line" onClick={() => setAdding({ meal })}>+ Aliment</button>
+              <button className="ghost add-line" onClick={() => setChoosing(meal)}>+ Menu</button>
+              {rows.length > 0 && (
+                <button
+                  className="ghost add-line save-menu"
+                  onClick={() => setSaving({ name: meal, items: rows.map(({ e }) => ({ food_id: e.food_id, qty: e.qty })) })}
+                >
+                  Enregistrer comme menu
+                </button>
+              )}
+            </div>
           </div>
         )
       })}
+      {msg && <p className="note">{msg}</p>}
+      {choosing && <MenuChooser meal={choosing} date={date} onClose={() => setChoosing(null)} />}
+      {saving && (
+        <MenuEditor
+          menu={saving}
+          onClose={(saved) => {
+            setSaving(null)
+            if (saved) setMsg(`Menu « ${saved.name} » enregistré. Retrouve-le dans l'onglet Mes menus.`)
+          }}
+        />
+      )}
       {adding && <AddEntry meal={adding.meal} entry={adding.entry} date={date} onClose={() => setAdding(null)} />}
     </section>
   )

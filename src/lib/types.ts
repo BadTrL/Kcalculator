@@ -48,3 +48,17 @@ export interface Macros {
   fat: number
   kcal: number
 }
+
+export interface MenuItem {
+  food_id: string
+  qty: number
+}
+
+/** Repas déjà calculé, enregistré pour être réutilisé. */
+export interface Menu {
+  id: string
+  name: string
+  items: MenuItem[]
+  updated_at: string
+  deleted?: boolean
+}

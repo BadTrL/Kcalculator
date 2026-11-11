@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Today } from './components/Today'
 import { Foods } from './components/Foods'
+import { Menus } from './components/Menus'
 import { ProfileView } from './components/ProfileView'
 import { Settings } from './components/Settings'
 import { useStore } from './lib/store'
@@ -8,6 +9,7 @@ import { supabase, sync } from './lib/sync'
 
 const TABS = [
   { id: 'today', label: 'Journal', icon: '🍽️' },
+  { id: 'menus', label: 'Mes menus', icon: '📋' },
   { id: 'foods', label: 'Aliments', icon: '🥑' },
   { id: 'profile', label: 'Profil', icon: '📊' },
   { id: 'settings', label: 'Réglages', icon: '⚙️' },
@@ -44,7 +46,7 @@ export default function App() {
   }, [runSync])
 
   useEffect(() => {
-    if (!dirty.foods.length && !dirty.entries.length && !dirty.profile) return
+    if (!dirty.foods.length && !dirty.entries.length && !dirty.menus.length && !dirty.profile) return
     window.clearTimeout(timer.current)
     timer.current = window.setTimeout(runSync, 3000)
   }, [dirty, runSync])
@@ -63,6 +65,7 @@ export default function App() {
       </header>
       <main>
         {tab === 'today' && <Today />}
+        {tab === 'menus' && <Menus />}
         {tab === 'foods' && <Foods />}
         {tab === 'profile' && <ProfileView key={profileStamp} />}
         {tab === 'settings' && <Settings status={status} onSync={runSync} />}

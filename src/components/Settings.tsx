@@ -45,7 +45,8 @@ export function Settings({ status, onSync }: { status: string; onSync: () => voi
         const s = JSON.parse(t) as State
         if (!s.foods || !s.entries || !s.profile) throw new Error()
         if (!confirm('Remplacer les données de cet appareil par cette sauvegarde ?')) return
-        setState({ ...s, dirty: { foods: Object.keys(s.foods), entries: Object.keys(s.entries), profile: true }, lastSync: null })
+        const menus = s.menus ?? {}
+        setState({ ...s, menus, dirty: { foods: Object.keys(s.foods), entries: Object.keys(s.entries), menus: Object.keys(menus), profile: true }, lastSync: null })
         setMsg('Sauvegarde importée.')
       } catch {
         setMsg('Fichier invalide.')
