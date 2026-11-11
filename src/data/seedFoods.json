@@ -1,0 +1,706 @@
+[
+ {
+  "name": "Avocat",
+  "unit": "g",
+  "protein": 2.0,
+  "carbs": 3.5,
+  "fat": 22.0,
+  "kcal": 220.0
+ },
+ {
+  "name": "Energy Diet (1u=100g)",
+  "unit": "g",
+  "protein": 17.0,
+  "carbs": 19.0,
+  "fat": 6.6,
+  "kcal": 210.0
+ },
+ {
+  "name": "Baked beans",
+  "unit": "g",
+  "protein": 8.4,
+  "carbs": 13.0,
+  "fat": 0.8,
+  "kcal": 93.0
+ },
+ {
+  "name": "Banane",
+  "unit": "g",
+  "protein": 1.5,
+  "carbs": 20.0,
+  "fat": 0.0,
+  "kcal": 86.0
+ },
+ {
+  "name": "Beurre",
+  "unit": "g",
+  "protein": 0.7,
+  "carbs": 0.5,
+  "fat": 80.0,
+  "kcal": 725.0
+ },
+ {
+  "name": "Bière",
+  "unit": "ml",
+  "protein": 0.4,
+  "carbs": 4.0,
+  "fat": 0.0,
+  "kcal": 46.0
+ },
+ {
+  "name": "Blanc d'œuf 53g (1u=100)",
+  "unit": "u",
+  "protein": 4.1,
+  "carbs": 0.3,
+  "fat": 0.0,
+  "kcal": 18.0
+ },
+ {
+  "name": "Bœuf",
+  "unit": "g",
+  "protein": 22.0,
+  "carbs": 0.0,
+  "fat": 7.0,
+  "kcal": 151.0
+ },
+ {
+  "name": "Broccolis",
+  "unit": "g",
+  "protein": 3.0,
+  "carbs": 3.0,
+  "fat": 0.3,
+  "kcal": 27.0
+ },
+ {
+  "name": "Chocolat noir",
+  "unit": "g",
+  "protein": 5.8,
+  "carbs": 49.0,
+  "fat": 31.0,
+  "kcal": 498.0
+ },
+ {
+  "name": "Choux fleur",
+  "unit": "g",
+  "protein": 1.3,
+  "carbs": 6.5,
+  "fat": 0.1,
+  "kcal": 32.0
+ },
+ {
+  "name": "Cottage cheese Danone",
+  "unit": "g",
+  "protein": 12.0,
+  "carbs": 1.6,
+  "fat": 3.7,
+  "kcal": 88.0
+ },
+ {
+  "name": "Epinards hachés",
+  "unit": "g",
+  "protein": 2.8,
+  "carbs": 3.6,
+  "fat": 0.9,
+  "kcal": 29.0
+ },
+ {
+  "name": "Farine",
+  "unit": "g",
+  "protein": 10.0,
+  "carbs": 75.0,
+  "fat": 1.5,
+  "kcal": 354.0
+ },
+ {
+  "name": "Flocon avoine complets",
+  "unit": "g",
+  "protein": 13.0,
+  "carbs": 61.0,
+  "fat": 7.0,
+  "kcal": 373.0
+ },
+ {
+  "name": "Huile olive",
+  "unit": "g",
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 92.0,
+  "kcal": 828.0
+ },
+ {
+  "name": "Jaune d'œuf 53g (1u=100)",
+  "unit": "u",
+  "protein": 2.7,
+  "carbs": 0.1,
+  "fat": 5.6,
+  "kcal": 61.0
+ },
+ {
+  "name": "Lait",
+  "unit": "g",
+  "protein": 3.2,
+  "carbs": 4.9,
+  "fat": 1.5,
+  "kcal": 46.0
+ },
+ {
+  "name": "Oatmeal",
+  "unit": "g",
+  "protein": 11.1,
+  "carbs": 61.5,
+  "fat": 7.1,
+  "kcal": 354.0
+ },
+ {
+  "name": "Oignons",
+  "unit": "g",
+  "protein": 1.4,
+  "carbs": 9.0,
+  "fat": 0.2,
+  "kcal": 43.0
+ },
+ {
+  "name": "Patate douce",
+  "unit": "g",
+  "protein": 1.6,
+  "carbs": 21.0,
+  "fat": 0.1,
+  "kcal": 91.3
+ },
+ {
+  "name": "Pâtes crues",
+  "unit": "g",
+  "protein": 12.5,
+  "carbs": 72.0,
+  "fat": 1.5,
+  "kcal": 352.0
+ },
+ {
+  "name": "Peanut butter",
+  "unit": "g",
+  "protein": 26.0,
+  "carbs": 17.0,
+  "fat": 49.0,
+  "kcal": 613.0
+ },
+ {
+  "name": "Petits pois",
+  "unit": "g",
+  "protein": 4.9,
+  "carbs": 11.0,
+  "fat": 0.7,
+  "kcal": 70.0
+ },
+ {
+  "name": "Pomme",
+  "unit": "g",
+  "protein": 0.3,
+  "carbs": 12.0,
+  "fat": 0.3,
+  "kcal": 52.0
+ },
+ {
+  "name": "Pomme dt",
+  "unit": "g",
+  "protein": 2.0,
+  "carbs": 18.0,
+  "fat": 0.1,
+  "kcal": 80.9
+ },
+ {
+  "name": "Poulet",
+  "unit": "g",
+  "protein": 23.0,
+  "carbs": 0.0,
+  "fat": 1.5,
+  "kcal": 106.0
+ },
+ {
+  "name": "Raisins",
+  "unit": "g",
+  "protein": 0.6,
+  "carbs": 15.0,
+  "fat": 0.7,
+  "kcal": 69.0
+ },
+ {
+  "name": "Rattatouille",
+  "unit": "g",
+  "protein": 1.2,
+  "carbs": 3.7,
+  "fat": 2.6,
+  "kcal": 46.0
+ },
+ {
+  "name": "Riz cru",
+  "unit": "g",
+  "protein": 7.9,
+  "carbs": 79.0,
+  "fat": 1.0,
+  "kcal": 357.0
+ },
+ {
+  "name": "Serré maigre",
+  "unit": "g",
+  "protein": 11.0,
+  "carbs": 3.0,
+  "fat": 0.2,
+  "kcal": 58.0
+ },
+ {
+  "name": "Sucre",
+  "unit": "g",
+  "protein": 0.0,
+  "carbs": 100.0,
+  "fat": 0.0,
+  "kcal": 400.0
+ },
+ {
+  "name": "Thon a l'eau",
+  "unit": "g",
+  "protein": 26.0,
+  "carbs": 0.0,
+  "fat": 0.5,
+  "kcal": 108.5
+ },
+ {
+  "name": "Tofu",
+  "unit": "g",
+  "protein": 17.0,
+  "carbs": 2.0,
+  "fat": 9.0,
+  "kcal": 157.0
+ },
+ {
+  "name": "Tortillas (40g/pce)",
+  "unit": "g",
+  "protein": 9.0,
+  "carbs": 53.0,
+  "fat": 5.0,
+  "kcal": 297.0
+ },
+ {
+  "name": "Viande séchée",
+  "unit": "g",
+  "protein": 43.0,
+  "carbs": 0.0,
+  "fat": 3.5,
+  "kcal": 204.0
+ },
+ {
+  "name": "Whey Iso",
+  "unit": "g",
+  "protein": 84.4,
+  "carbs": 3.5,
+  "fat": 2.42,
+  "kcal": 379.0
+ },
+ {
+  "name": "Whey prot",
+  "unit": "g",
+  "protein": 76.9,
+  "carbs": 5.1,
+  "fat": 5.1,
+  "kcal": 398.0
+ },
+ {
+  "name": "Yogourth nature",
+  "unit": "g",
+  "protein": 3.5,
+  "carbs": 4.5,
+  "fat": 10.5,
+  "kcal": 127.0
+ },
+ {
+  "name": "Yogourth grecque",
+  "unit": "g",
+  "protein": 5.3,
+  "carbs": 3.4,
+  "fat": 2.0,
+  "kcal": 53.0
+ },
+ {
+  "name": "Flocon avoine",
+  "unit": "g",
+  "protein": 14.0,
+  "carbs": 56.0,
+  "fat": 6.7,
+  "kcal": 361.0
+ },
+ {
+  "name": "Exquisa  0,2",
+  "unit": "g",
+  "protein": 10.0,
+  "carbs": 4.3,
+  "fat": 0.2,
+  "kcal": 64.0
+ },
+ {
+  "name": "Philadelphia leger",
+  "unit": "g",
+  "protein": 11.0,
+  "carbs": 4.9,
+  "fat": 2.5,
+  "kcal": 87.0
+ },
+ {
+  "name": "Crunchy",
+  "unit": "g",
+  "protein": 11.9,
+  "carbs": 62.6,
+  "fat": 13.7,
+  "kcal": 436.0
+ },
+ {
+  "name": "Riz complet",
+  "unit": "g",
+  "protein": 9.1,
+  "carbs": 69.0,
+  "fat": 2.5,
+  "kcal": 344.0
+ },
+ {
+  "name": "Lentille corail",
+  "unit": "g",
+  "protein": 24.0,
+  "carbs": 42.0,
+  "fat": 2.1,
+  "kcal": 322.0
+ },
+ {
+  "name": "Pâtes complet",
+  "unit": "g",
+  "protein": 12.5,
+  "carbs": 65.5,
+  "fat": 2.2,
+  "kcal": 347.0
+ },
+ {
+  "name": "haricots verts",
+  "unit": "g",
+  "protein": 1.4,
+  "carbs": 1.8,
+  "fat": 0.1,
+  "kcal": 16.0
+ },
+ {
+  "name": "Taboulet",
+  "unit": "g",
+  "protein": 3.0,
+  "carbs": 17.0,
+  "fat": 6.0,
+  "kcal": 100.0
+ },
+ {
+  "name": "Brocoli",
+  "unit": "g",
+  "protein": 2.1,
+  "carbs": 7.0,
+  "fat": 0.41,
+  "kcal": 35.0
+ },
+ {
+  "name": "Pâtes corail",
+  "unit": "g",
+  "protein": 25.0,
+  "carbs": 47.4,
+  "fat": 2.4,
+  "kcal": 335.0
+ },
+ {
+  "name": "crevettes",
+  "unit": "g",
+  "protein": 18.0,
+  "carbs": 0.0,
+  "fat": 1.0,
+  "kcal": 88.0
+ },
+ {
+  "name": "Steak 5%",
+  "unit": "g",
+  "protein": 22.0,
+  "carbs": 0.5,
+  "fat": 4.6,
+  "kcal": 130.0
+ },
+ {
+  "name": "Legumes basques",
+  "unit": "g",
+  "protein": 1.3,
+  "carbs": 3.8,
+  "fat": 5.9,
+  "kcal": 78.0
+ },
+ {
+  "name": "Colin Alaska",
+  "unit": "g",
+  "protein": 17.0,
+  "carbs": 0.0,
+  "fat": 0.8,
+  "kcal": 76.0
+ },
+ {
+  "name": "Parmesan",
+  "unit": "g",
+  "protein": 32.0,
+  "carbs": 0.0,
+  "fat": 30.0,
+  "kcal": 402.0
+ },
+ {
+  "name": "carottes",
+  "unit": "g",
+  "protein": 0.93,
+  "carbs": 9.6,
+  "fat": 0.24,
+  "kcal": 41.0
+ },
+ {
+  "name": "Radis Blanc",
+  "unit": "g",
+  "protein": 0.6,
+  "carbs": 4.1,
+  "fat": 0.1,
+  "kcal": 18.0
+ },
+ {
+  "name": "sauce soja",
+  "unit": "ml",
+  "protein": 10.0,
+  "carbs": 3.2,
+  "fat": 0.0,
+  "kcal": 77.0
+ },
+ {
+  "name": "Champignons",
+  "unit": "g",
+  "protein": 3.1,
+  "carbs": 3.3,
+  "fat": 0.34,
+  "kcal": 80.0
+ },
+ {
+  "name": "Gochujang",
+  "unit": "ml",
+  "protein": 5.0,
+  "carbs": 45.0,
+  "fat": 2.5,
+  "kcal": 225.0
+ },
+ {
+  "name": "Foie de veau",
+  "unit": "g",
+  "protein": 25.0,
+  "carbs": 1.6,
+  "fat": 4.0,
+  "kcal": 142.0
+ },
+ {
+  "name": "Tomates",
+  "unit": "g",
+  "protein": 0.75,
+  "carbs": 3.3,
+  "fat": 0.17,
+  "kcal": 18.0
+ },
+ {
+  "name": "lamelles kebab",
+  "unit": "g",
+  "protein": 14.2,
+  "carbs": 2.1,
+  "fat": 8.77,
+  "kcal": 142.0
+ },
+ {
+  "name": "légumes grecque",
+  "unit": "g",
+  "protein": 1.9,
+  "carbs": 4.7,
+  "fat": 2.9,
+  "kcal": 58.0
+ },
+ {
+  "name": "A la campagnarde",
+  "unit": "g",
+  "protein": 2.1,
+  "carbs": 9.6,
+  "fat": 3.4,
+  "kcal": 80.0
+ },
+ {
+  "name": "Pommes noisettes",
+  "unit": "g",
+  "protein": 2.7,
+  "carbs": 26.0,
+  "fat": 6.3,
+  "kcal": 178.0
+ },
+ {
+  "name": "nuggets de poulet",
+  "unit": "g",
+  "protein": 15.0,
+  "carbs": 15.0,
+  "fat": 7.9,
+  "kcal": 193.0
+ },
+ {
+  "name": "frites 3 légumes",
+  "unit": "g",
+  "protein": 1.6,
+  "carbs": 14.0,
+  "fat": 6.4,
+  "kcal": 127.0
+ },
+ {
+  "name": "skyr",
+  "unit": "g",
+  "protein": 9.5,
+  "carbs": 4.0,
+  "fat": 0.0,
+  "kcal": 54.0
+ },
+ {
+  "name": "Joody",
+  "unit": "g",
+  "protein": 21.5,
+  "carbs": 38.8,
+  "fat": 18.5,
+  "kcal": 426.0
+ },
+ {
+  "name": "oeuf",
+  "unit": "u",
+  "protein": 6.8,
+  "carbs": 0.4,
+  "fat": 5.6,
+  "kcal": 79
+ },
+ {
+  "name": "nuggets unité",
+  "unit": "u",
+  "protein": 3,
+  "carbs": 3,
+  "fat": 1.58,
+  "kcal": 38.6
+ },
+ {
+  "name": "Pommes noisettes unité",
+  "unit": "u",
+  "protein": 0.216,
+  "carbs": 2.08,
+  "fat": 0.504,
+  "kcal": 14.24
+ },
+ {
+  "name": "Moutarde",
+  "unit": "g",
+  "protein": 7.6,
+  "carbs": 2.6,
+  "fat": 10.0,
+  "kcal": 144.0
+ },
+ {
+  "name": "Ail",
+  "unit": "g",
+  "protein": 5.31,
+  "carbs": 18.6,
+  "fat": 0.5,
+  "kcal": 111.0
+ },
+ {
+  "name": "wrap",
+  "unit": "u",
+  "protein": 5.3,
+  "carbs": 31.2,
+  "fat": 3.0,
+  "kcal": 175.0
+ },
+ {
+  "name": "concentré de tomates",
+  "unit": "g",
+  "protein": 4.4,
+  "carbs": 14.0,
+  "fat": 0.3,
+  "kcal": 82.0
+ },
+ {
+  "name": "mayonnaise maison sans huile",
+  "unit": "g",
+  "protein": 7.43,
+  "carbs": 2.34,
+  "fat": 4.25,
+  "kcal": 77.0
+ },
+ {
+  "name": "pain de mie complet harry's",
+  "unit": "u",
+  "protein": 3.3,
+  "carbs": 18.0,
+  "fat": 2.9,
+  "kcal": 120.0
+ },
+ {
+  "name": "Graine de lupin",
+  "unit": "g",
+  "protein": 15.0,
+  "carbs": 0.5,
+  "fat": 5.2,
+  "kcal": 123.0
+ },
+ {
+  "name": "muesli chocolat amandes",
+  "unit": "g",
+  "protein": 5.4,
+  "carbs": 26.0,
+  "fat": 7.8,
+  "kcal": 202.0
+ },
+ {
+  "name": "Poêlée de gnocchis",
+  "unit": "g",
+  "protein": 5.2,
+  "carbs": 24.0,
+  "fat": 4.1,
+  "kcal": 159.0
+ },
+ {
+  "name": "Tagliatelle saumon",
+  "unit": "g",
+  "protein": 5.7,
+  "carbs": 12.0,
+  "fat": 4.2,
+  "kcal": 110.0
+ },
+ {
+  "name": "tranche toastiligne",
+  "unit": "u",
+  "protein": 4.1,
+  "carbs": 16.0,
+  "fat": 1.1,
+  "kcal": 95.0
+ },
+ {
+  "name": "saint moret leger 8%",
+  "unit": "g",
+  "protein": 10.0,
+  "carbs": 5.0,
+  "fat": 8.0,
+  "kcal": 132.0
+ },
+ {
+  "name": "Cottage cheese zuger",
+  "unit": "g",
+  "protein": 13.0,
+  "carbs": 3.5,
+  "fat": 4.5,
+  "kcal": 107.0
+ },
+ {
+  "name": "Poivrons",
+  "unit": "g",
+  "protein": 2.8,
+  "carbs": 6.5,
+  "fat": 0.2,
+  "kcal": 35.7
+ }
+]
