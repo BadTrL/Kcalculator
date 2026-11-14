@@ -63,7 +63,7 @@ export interface Menu {
   id: string
   name: string
   items: MenuItem[] // quantités totales à cuisiner
-  portions?: number // batch cooking : nombre de jours / portions (1 par défaut)
+  portions?: number // batch cooking : nombre de repas / portions (1 par défaut)
   updated_at: string
   deleted?: boolean
 }

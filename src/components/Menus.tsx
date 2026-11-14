@@ -59,12 +59,12 @@ export function MenuEditor({ menu, onClose }: { menu: Partial<Menu>; onClose: (s
         </div>
         <label>Nom du menu<input autoFocus={!menu.name} required value={name} onChange={(e) => setName(e.target.value)} placeholder="ex. Petit-déj avoine whey" /></label>
         <label>
-          Batch cooking : préparé pour combien de jours ?
+          Batch cooking : préparé pour combien de repas ?
           <input type="number" min={1} max={30} inputMode="numeric" value={portionsTxt} onChange={(e) => setPortionsTxt(e.target.value)} />
         </label>
         {portions > 1 && (
           <p className="muted small">
-            Saisis les quantités totales à cuisiner. Chaque jour, tu manges une portion : les quantités divisées par {portions}.
+            Saisis les quantités totales à cuisiner. Chaque repas est une portion : les quantités divisées par {portions}.
           </p>
         )}
 
@@ -77,7 +77,7 @@ export function MenuEditor({ menu, onClose }: { menu: Partial<Menu>; onClose: (s
                   <span>{f ? f.name : 'Aliment supprimé'}</span>
                   <span className="muted small">
                     {it.qty} {f?.unit ?? ''}
-                    {f && portions > 1 && ` · ${portionQty(it.qty, portions, f.unit)} ${f.unit} / jour`}
+                    {f && portions > 1 && ` · ${portionQty(it.qty, portions, f.unit)} ${f.unit} / repas`}
                   </span>
                 </div>
                 <span className="small">{f ? r(macrosFor(f, it.qty).kcal) : 0} kcal</span>
@@ -89,13 +89,13 @@ export function MenuEditor({ menu, onClose }: { menu: Partial<Menu>; onClose: (s
 
         <div className="menu-total">
           <span>
-            {portions > 1 ? `À cuisiner (${portions} jours)` : 'Total'} <DietBadge diet={diet} />
+            {portions > 1 ? `À cuisiner (${portions} repas)` : 'Total'} <DietBadge diet={diet} />
           </span>
           <MacroLine m={total} />
         </div>
         {portions > 1 && (
           <div className="menu-total portion">
-            <span>Par jour (1 portion)</span>
+            <span>Par repas (1 portion)</span>
             <MacroLine m={scaleMacros(total, 1 / portions)} />
           </div>
         )}
@@ -139,7 +139,7 @@ export function MenuEditor({ menu, onClose }: { menu: Partial<Menu>; onClose: (s
 function AddToJournal({ menu, onClose }: { menu: Menu; onClose: (msg?: string) => void }) {
   const portions = portionsOf(menu)
   const [date, setDate] = useState(() => iso(new Date()))
-  const [spread, setSpread] = useState(true)
+  const [spread, setSpread] = useState(false)
   const days = portions > 1 && spread ? portions : 1
   const [meal, setMeal] = useState<Meal>(() => {
     const h = new Date().getHours()
@@ -169,7 +169,7 @@ function AddToJournal({ menu, onClose }: { menu: Menu; onClose: (msg?: string) =
         {portions > 1 && (
           <label className="check">
             <input type="checkbox" checked={spread} onChange={(e) => setSpread(e.target.checked)} />
-            Batch cooking : ajouter une portion chaque jour pendant {portions} jours
+            Ajouter aussi ce repas les jours suivants ({portions} repas sur {portions} jours)
           </label>
         )}
         <div className="seg">
@@ -193,13 +193,13 @@ function MenuCard({ menu, onEdit, onAdd }: { menu: Menu; onEdit: () => void; onA
       <div className="menu-card-body" onClick={onEdit} tabIndex={0} onKeyDown={(k) => k.key === 'Enter' && onEdit()}>
         <h3>
           {menu.name} <DietBadge diet={diet} />
-          {portions > 1 && <span className="badge batch">Batch {portions} j</span>}
+          {portions > 1 && <span className="badge batch">Batch {portions} repas</span>}
         </h3>
         <p className="muted small">{menu.items.map((it) => foods[it.food_id]?.name).filter(Boolean).join(', ')}</p>
         {portions > 1 ? (
           <>
             <MacroLine m={scaleMacros(total, 1 / portions)} />
-            <p className="muted small">par jour · total à cuisiner {Math.round(total.kcal)} kcal</p>
+            <p className="muted small">par repas · total {Math.round(total.kcal)} kcal</p>
           </>
         ) : (
           <MacroLine m={total} />

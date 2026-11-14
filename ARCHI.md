@@ -32,7 +32,7 @@ Il y a donc trois morceaux, chacun avec un rôle bien séparé :
 
 Une **PWA** (Progressive Web App) est un site web qui se comporte comme une appli : on l'installe sur l'écran d'accueil du téléphone ou sur le PC, elle s'ouvre en plein écran et elle marche **hors ligne**.
 
-L'appli fait tous les calculs elle-même, sur ton appareil : métabolisme de base, objectif calorique, macros, totaux des repas, portions de batch cooking. Il n'y a pas de « serveur de calcul ».
+L'appli fait tous les calculs elle-même, sur ton appareil : métabolisme de base, objectif calorique, macros, totaux des repas, portions de batch cooking, historique du calendrier. Il n'y a pas de « serveur de calcul ».
 
 Tes données sont d'abord enregistrées **sur l'appareil** (dans le stockage du navigateur). C'est ce qui permet d'utiliser l'appli sans réseau, par exemple au supermarché. La synchro avec Supabase vient ensuite, dès qu'il y a une connexion.
 
@@ -81,7 +81,7 @@ Les tables de Kcalculator :
 |---|---|
 | `foods` | Tes aliments : nom, valeurs pour 100 g / 100 ml / 1 unité, code-barres, régime (végé / vegan) |
 | `entries` | Ton journal : quel aliment, quelle quantité, quel jour, quel repas |
-| `menus` | Tes menus enregistrés, avec le nombre de jours pour le batch cooking |
+| `menus` | Tes menus enregistrés, avec le nombre de repas pour le batch cooking |
 | `profiles` | Ton profil (poids, % de graisse, activité, objectif) |
 
 **Sécurité** : chaque ligne porte l'identifiant de ton compte, et des règles (« Row Level Security ») font qu'un compte ne peut lire et modifier **que ses propres lignes**. C'est pour ça que la clé publique peut se trouver dans l'appli sans danger.

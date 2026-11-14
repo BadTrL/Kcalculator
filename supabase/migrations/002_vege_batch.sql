@@ -9,7 +9,7 @@ alter table public.foods add column if not exists diet text;
 alter table public.foods drop constraint if exists foods_diet_check;
 alter table public.foods add constraint foods_diet_check check (diet is null or diet in ('vege', 'vegan'));
 
--- Menus : nombre de jours / portions pour le batch cooking (1 = repas normal).
+-- Menus : nombre de repas / portions pour le batch cooking (1 = repas normal).
 alter table public.menus add column if not exists portions integer not null default 1;
 alter table public.menus drop constraint if exists menus_portions_check;
 alter table public.menus add constraint menus_portions_check check (portions >= 1);

@@ -9,7 +9,8 @@ Fonctionne sur téléphone et sur PC (appli web installable), hors ligne, avec s
 - **Mes menus** : tes repas déjà calculés, enregistrés pour les réutiliser. Dans le Journal, « Enregistrer comme menu » sauvegarde un repas rempli, et « + Menu » l'ajoute en un clic.
 - **Aliments** : ta base d'aliments (tes 88 aliments de l'Excel sont déjà importés). Valeurs pour 100 g, 100 ml ou pour 1 unité.
 - **Végé / vegan** : chaque aliment peut être marqué Végé ou Vegan. Filtre Tous / Végé / Vegan dans Aliments, dans le choix d'un aliment et dans Mes menus (un menu est vegan si tous ses aliments le sont). Le scan pré-remplit le régime quand Open Food Facts le connaît.
-- **Batch cooking** : dans un menu, indique pour combien de jours tu cuisines. Tu saisis les quantités totales, l'appli affiche la portion par jour (quantités divisées par le nombre de jours) avec ses kcal et macros. « + Journal » ajoute une portion chaque jour pendant ces jours.
+- **Batch cooking** : dans un menu, indique pour combien de repas tu cuisines. Tu saisis les quantités totales, l'appli affiche la portion par repas (quantités divisées par le nombre de repas) avec ses kcal et macros. « + Journal » ajoute une portion au repas choisi, et peut aussi la répéter les jours suivants.
+- **Calendrier** : dans le Journal, touche la date pour ouvrir le calendrier. Chaque jour affiche ses kcal (en couleur selon l'objectif), avec la moyenne du mois. Touche un jour pour revoir ce que tu as mangé.
 - **Scan de code-barres** avec la caméra : l'appli récupère les valeurs sur Open Food Facts, tu vérifies et tu enregistres.
 - **Profil** : même calcul que ton fichier Excel. Katch-McArdle (370 + 21,6 × masse maigre) × activité, objectif sèche / maintien / prise de masse arrondi à 50 kcal, protéines et lipides en g/kg de masse maigre, glucides sur le reste.
 - **Réglages** : connexion pour la synchro, export / import d'une sauvegarde.
