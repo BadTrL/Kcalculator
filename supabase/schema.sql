@@ -1,5 +1,6 @@
 -- Kcalculator : schéma Supabase.
 -- À coller dans Supabase > SQL Editor > New query, puis "Run".
+-- Nouveau projet : ce fichier suffit. Projet déjà installé : lance les fichiers de supabase/migrations/.
 
 create table if not exists public.foods (
   user_id uuid not null references auth.users on delete cascade default auth.uid(),
@@ -12,6 +13,7 @@ create table if not exists public.foods (
   kcal real not null default 0,
   barcode text,
   brand text,
+  diet text check (diet is null or diet in ('vege', 'vegan')),
   deleted boolean not null default false,
   updated_at timestamptz not null,
   synced_at timestamptz not null default now(),
@@ -36,6 +38,7 @@ create table if not exists public.menus (
   id text not null,
   name text not null,
   items jsonb not null default '[]',
+  portions integer not null default 1 check (portions >= 1),
   deleted boolean not null default false,
   updated_at timestamptz not null,
   synced_at timestamptz not null default now(),

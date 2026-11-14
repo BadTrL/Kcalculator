@@ -7,6 +7,15 @@ export interface OffProduct {
   carbs: number
   fat: number
   kcal: number
+  diet: 'vege' | 'vegan' | null
+}
+
+/** Open Food Facts déduit vegan / végétarien de la liste d'ingrédients (en:vegan, en:vegetarian…). */
+function dietFrom(tags: unknown): OffProduct['diet'] {
+  const t = Array.isArray(tags) ? (tags as string[]) : []
+  if (t.includes('en:vegan')) return 'vegan'
+  if (t.includes('en:vegetarian')) return 'vege'
+  return null
 }
 
 const n = (v: unknown) => {
@@ -15,7 +24,7 @@ const n = (v: unknown) => {
 }
 
 export async function lookupBarcode(code: string): Promise<OffProduct | null> {
-  const fields = 'product_name,product_name_fr,brands,nutriments,quantity'
+  const fields = 'product_name,product_name_fr,brands,nutriments,quantity,ingredients_analysis_tags'
   const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=${fields}`)
   if (!res.ok) return null
   const json = await res.json()
@@ -32,5 +41,6 @@ export async function lookupBarcode(code: string): Promise<OffProduct | null> {
     carbs: n(nu.carbohydrates_100g),
     fat: n(nu.fat_100g),
     kcal,
+    diet: dietFrom(p.ingredients_analysis_tags),
   }
 }

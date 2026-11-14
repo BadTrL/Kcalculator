@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bmr, macrosFor, maintenance, targetKcal, targets } from './calc'
+import { bmr, dietMatches, macrosFor, maintenance, menuDiet, portionQty, portionsOf, targetKcal, targets } from './calc'
 import type { Food, Profile } from './types'
 
 // Valeurs du fichier "Calculateur Macro.xlsx" de Sacha.
@@ -37,5 +37,36 @@ describe('calculs', () => {
     expect(macrosFor(egg, 3).kcal).toBeCloseTo(237)
     const rice: Food = { ...egg, unit: 'g', kcal: 357 }
     expect(macrosFor(rice, 50).kcal).toBeCloseTo(178.5)
+  })
+})
+
+describe('végé / vegan', () => {
+  it('un aliment vegan passe le filtre végé, pas l\'inverse', () => {
+    expect(dietMatches('vegan', 'vege')).toBe(true)
+    expect(dietMatches('vege', 'vegan')).toBe(false)
+    expect(dietMatches(null, 'vege')).toBe(false)
+    expect(dietMatches(null, null)).toBe(true)
+  })
+
+  it('déduit le régime d\'un menu de ses aliments', () => {
+    expect(menuDiet([{ diet: 'vegan' }, { diet: 'vegan' }])).toBe('vegan')
+    expect(menuDiet([{ diet: 'vegan' }, { diet: 'vege' }])).toBe('vege')
+    expect(menuDiet([{ diet: 'vegan' }, { diet: null }])).toBe(null)
+    expect(menuDiet([{ diet: 'vegan' }, undefined])).toBe('vegan')
+    expect(menuDiet([])).toBe(null)
+  })
+})
+
+describe('batch cooking', () => {
+  it('divise les quantités par le nombre de jours', () => {
+    expect(portionQty(1000, 4, 'g')).toBe(250)
+    expect(portionQty(500, 3, 'g')).toBe(166.7)
+    expect(portionQty(5, 3, 'u')).toBe(1.67)
+  })
+
+  it('ramène un nombre de portions absent ou invalide à 1', () => {
+    expect(portionsOf({})).toBe(1)
+    expect(portionsOf({ portions: 0 })).toBe(1)
+    expect(portionsOf({ portions: 5 })).toBe(5)
   })
 })

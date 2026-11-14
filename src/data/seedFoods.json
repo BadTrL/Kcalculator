@@ -5,7 +5,8 @@
   "protein": 2.0,
   "carbs": 3.5,
   "fat": 22.0,
-  "kcal": 220.0
+  "kcal": 220.0,
+  "diet": "vegan"
  },
  {
   "name": "Energy Diet (1u=100g)",
@@ -13,7 +14,8 @@
   "protein": 17.0,
   "carbs": 19.0,
   "fat": 6.6,
-  "kcal": 210.0
+  "kcal": 210.0,
+  "diet": "vege"
  },
  {
   "name": "Baked beans",
@@ -21,7 +23,8 @@
   "protein": 8.4,
   "carbs": 13.0,
   "fat": 0.8,
-  "kcal": 93.0
+  "kcal": 93.0,
+  "diet": "vegan"
  },
  {
   "name": "Banane",
@@ -29,7 +32,8 @@
   "protein": 1.5,
   "carbs": 20.0,
   "fat": 0.0,
-  "kcal": 86.0
+  "kcal": 86.0,
+  "diet": "vegan"
  },
  {
   "name": "Beurre",
@@ -37,7 +41,8 @@
   "protein": 0.7,
   "carbs": 0.5,
   "fat": 80.0,
-  "kcal": 725.0
+  "kcal": 725.0,
+  "diet": "vege"
  },
  {
   "name": "Bière",
@@ -45,7 +50,8 @@
   "protein": 0.4,
   "carbs": 4.0,
   "fat": 0.0,
-  "kcal": 46.0
+  "kcal": 46.0,
+  "diet": "vegan"
  },
  {
   "name": "Blanc d'œuf 53g (1u=100)",
@@ -53,7 +59,8 @@
   "protein": 4.1,
   "carbs": 0.3,
   "fat": 0.0,
-  "kcal": 18.0
+  "kcal": 18.0,
+  "diet": "vege"
  },
  {
   "name": "Bœuf",
@@ -61,7 +68,8 @@
   "protein": 22.0,
   "carbs": 0.0,
   "fat": 7.0,
-  "kcal": 151.0
+  "kcal": 151.0,
+  "diet": null
  },
  {
   "name": "Broccolis",
@@ -69,7 +77,8 @@
   "protein": 3.0,
   "carbs": 3.0,
   "fat": 0.3,
-  "kcal": 27.0
+  "kcal": 27.0,
+  "diet": "vegan"
  },
  {
   "name": "Chocolat noir",
@@ -77,7 +86,8 @@
   "protein": 5.8,
   "carbs": 49.0,
   "fat": 31.0,
-  "kcal": 498.0
+  "kcal": 498.0,
+  "diet": "vege"
  },
  {
   "name": "Choux fleur",
@@ -85,7 +95,8 @@
   "protein": 1.3,
   "carbs": 6.5,
   "fat": 0.1,
-  "kcal": 32.0
+  "kcal": 32.0,
+  "diet": "vegan"
  },
  {
   "name": "Cottage cheese Danone",
@@ -93,7 +104,8 @@
   "protein": 12.0,
   "carbs": 1.6,
   "fat": 3.7,
-  "kcal": 88.0
+  "kcal": 88.0,
+  "diet": "vege"
  },
  {
   "name": "Epinards hachés",
@@ -101,7 +113,8 @@
   "protein": 2.8,
   "carbs": 3.6,
   "fat": 0.9,
-  "kcal": 29.0
+  "kcal": 29.0,
+  "diet": "vegan"
  },
  {
   "name": "Farine",
@@ -109,7 +122,8 @@
   "protein": 10.0,
   "carbs": 75.0,
   "fat": 1.5,
-  "kcal": 354.0
+  "kcal": 354.0,
+  "diet": "vegan"
  },
  {
   "name": "Flocon avoine complets",
@@ -117,7 +131,8 @@
   "protein": 13.0,
   "carbs": 61.0,
   "fat": 7.0,
-  "kcal": 373.0
+  "kcal": 373.0,
+  "diet": "vegan"
  },
  {
   "name": "Huile olive",
@@ -125,7 +140,8 @@
   "protein": 0.0,
   "carbs": 0.0,
   "fat": 92.0,
-  "kcal": 828.0
+  "kcal": 828.0,
+  "diet": "vegan"
  },
  {
   "name": "Jaune d'œuf 53g (1u=100)",
@@ -133,7 +149,8 @@
   "protein": 2.7,
   "carbs": 0.1,
   "fat": 5.6,
-  "kcal": 61.0
+  "kcal": 61.0,
+  "diet": "vege"
  },
  {
   "name": "Lait",
@@ -141,7 +158,8 @@
   "protein": 3.2,
   "carbs": 4.9,
   "fat": 1.5,
-  "kcal": 46.0
+  "kcal": 46.0,
+  "diet": "vege"
  },
  {
   "name": "Oatmeal",
@@ -149,7 +167,8 @@
   "protein": 11.1,
   "carbs": 61.5,
   "fat": 7.1,
-  "kcal": 354.0
+  "kcal": 354.0,
+  "diet": "vegan"
  },
  {
   "name": "Oignons",
@@ -157,7 +176,8 @@
   "protein": 1.4,
   "carbs": 9.0,
   "fat": 0.2,
-  "kcal": 43.0
+  "kcal": 43.0,
+  "diet": "vegan"
  },
  {
   "name": "Patate douce",
@@ -165,7 +185,8 @@
   "protein": 1.6,
   "carbs": 21.0,
   "fat": 0.1,
-  "kcal": 91.3
+  "kcal": 91.3,
+  "diet": "vegan"
  },
  {
   "name": "Pâtes crues",
@@ -173,7 +194,8 @@
   "protein": 12.5,
   "carbs": 72.0,
   "fat": 1.5,
-  "kcal": 352.0
+  "kcal": 352.0,
+  "diet": "vegan"
  },
  {
   "name": "Peanut butter",
@@ -181,7 +203,8 @@
   "protein": 26.0,
   "carbs": 17.0,
   "fat": 49.0,
-  "kcal": 613.0
+  "kcal": 613.0,
+  "diet": "vegan"
  },
  {
   "name": "Petits pois",
@@ -189,7 +212,8 @@
   "protein": 4.9,
   "carbs": 11.0,
   "fat": 0.7,
-  "kcal": 70.0
+  "kcal": 70.0,
+  "diet": "vegan"
  },
  {
   "name": "Pomme",
@@ -197,7 +221,8 @@
   "protein": 0.3,
   "carbs": 12.0,
   "fat": 0.3,
-  "kcal": 52.0
+  "kcal": 52.0,
+  "diet": "vegan"
  },
  {
   "name": "Pomme dt",
@@ -205,7 +230,8 @@
   "protein": 2.0,
   "carbs": 18.0,
   "fat": 0.1,
-  "kcal": 80.9
+  "kcal": 80.9,
+  "diet": "vegan"
  },
  {
   "name": "Poulet",
@@ -213,7 +239,8 @@
   "protein": 23.0,
   "carbs": 0.0,
   "fat": 1.5,
-  "kcal": 106.0
+  "kcal": 106.0,
+  "diet": null
  },
  {
   "name": "Raisins",
@@ -221,7 +248,8 @@
   "protein": 0.6,
   "carbs": 15.0,
   "fat": 0.7,
-  "kcal": 69.0
+  "kcal": 69.0,
+  "diet": "vegan"
  },
  {
   "name": "Rattatouille",
@@ -229,7 +257,8 @@
   "protein": 1.2,
   "carbs": 3.7,
   "fat": 2.6,
-  "kcal": 46.0
+  "kcal": 46.0,
+  "diet": "vegan"
  },
  {
   "name": "Riz cru",
@@ -237,7 +266,8 @@
   "protein": 7.9,
   "carbs": 79.0,
   "fat": 1.0,
-  "kcal": 357.0
+  "kcal": 357.0,
+  "diet": "vegan"
  },
  {
   "name": "Serré maigre",
@@ -245,7 +275,8 @@
   "protein": 11.0,
   "carbs": 3.0,
   "fat": 0.2,
-  "kcal": 58.0
+  "kcal": 58.0,
+  "diet": "vege"
  },
  {
   "name": "Sucre",
@@ -253,7 +284,8 @@
   "protein": 0.0,
   "carbs": 100.0,
   "fat": 0.0,
-  "kcal": 400.0
+  "kcal": 400.0,
+  "diet": "vegan"
  },
  {
   "name": "Thon a l'eau",
@@ -261,7 +293,8 @@
   "protein": 26.0,
   "carbs": 0.0,
   "fat": 0.5,
-  "kcal": 108.5
+  "kcal": 108.5,
+  "diet": null
  },
  {
   "name": "Tofu",
@@ -269,7 +302,8 @@
   "protein": 17.0,
   "carbs": 2.0,
   "fat": 9.0,
-  "kcal": 157.0
+  "kcal": 157.0,
+  "diet": "vegan"
  },
  {
   "name": "Tortillas (40g/pce)",
@@ -277,7 +311,8 @@
   "protein": 9.0,
   "carbs": 53.0,
   "fat": 5.0,
-  "kcal": 297.0
+  "kcal": 297.0,
+  "diet": "vegan"
  },
  {
   "name": "Viande séchée",
@@ -285,7 +320,8 @@
   "protein": 43.0,
   "carbs": 0.0,
   "fat": 3.5,
-  "kcal": 204.0
+  "kcal": 204.0,
+  "diet": null
  },
  {
   "name": "Whey Iso",
@@ -293,7 +329,8 @@
   "protein": 84.4,
   "carbs": 3.5,
   "fat": 2.42,
-  "kcal": 379.0
+  "kcal": 379.0,
+  "diet": "vege"
  },
  {
   "name": "Whey prot",
@@ -301,7 +338,8 @@
   "protein": 76.9,
   "carbs": 5.1,
   "fat": 5.1,
-  "kcal": 398.0
+  "kcal": 398.0,
+  "diet": "vege"
  },
  {
   "name": "Yogourth nature",
@@ -309,7 +347,8 @@
   "protein": 3.5,
   "carbs": 4.5,
   "fat": 10.5,
-  "kcal": 127.0
+  "kcal": 127.0,
+  "diet": "vege"
  },
  {
   "name": "Yogourth grecque",
@@ -317,7 +356,8 @@
   "protein": 5.3,
   "carbs": 3.4,
   "fat": 2.0,
-  "kcal": 53.0
+  "kcal": 53.0,
+  "diet": "vege"
  },
  {
   "name": "Flocon avoine",
@@ -325,7 +365,8 @@
   "protein": 14.0,
   "carbs": 56.0,
   "fat": 6.7,
-  "kcal": 361.0
+  "kcal": 361.0,
+  "diet": "vegan"
  },
  {
   "name": "Exquisa  0,2",
@@ -333,7 +374,8 @@
   "protein": 10.0,
   "carbs": 4.3,
   "fat": 0.2,
-  "kcal": 64.0
+  "kcal": 64.0,
+  "diet": "vege"
  },
  {
   "name": "Philadelphia leger",
@@ -341,7 +383,8 @@
   "protein": 11.0,
   "carbs": 4.9,
   "fat": 2.5,
-  "kcal": 87.0
+  "kcal": 87.0,
+  "diet": "vege"
  },
  {
   "name": "Crunchy",
@@ -349,7 +392,8 @@
   "protein": 11.9,
   "carbs": 62.6,
   "fat": 13.7,
-  "kcal": 436.0
+  "kcal": 436.0,
+  "diet": null
  },
  {
   "name": "Riz complet",
@@ -357,7 +401,8 @@
   "protein": 9.1,
   "carbs": 69.0,
   "fat": 2.5,
-  "kcal": 344.0
+  "kcal": 344.0,
+  "diet": "vegan"
  },
  {
   "name": "Lentille corail",
@@ -365,7 +410,8 @@
   "protein": 24.0,
   "carbs": 42.0,
   "fat": 2.1,
-  "kcal": 322.0
+  "kcal": 322.0,
+  "diet": "vegan"
  },
  {
   "name": "Pâtes complet",
@@ -373,7 +419,8 @@
   "protein": 12.5,
   "carbs": 65.5,
   "fat": 2.2,
-  "kcal": 347.0
+  "kcal": 347.0,
+  "diet": "vegan"
  },
  {
   "name": "haricots verts",
@@ -381,7 +428,8 @@
   "protein": 1.4,
   "carbs": 1.8,
   "fat": 0.1,
-  "kcal": 16.0
+  "kcal": 16.0,
+  "diet": "vegan"
  },
  {
   "name": "Taboulet",
@@ -389,7 +437,8 @@
   "protein": 3.0,
   "carbs": 17.0,
   "fat": 6.0,
-  "kcal": 100.0
+  "kcal": 100.0,
+  "diet": "vegan"
  },
  {
   "name": "Brocoli",
@@ -397,7 +446,8 @@
   "protein": 2.1,
   "carbs": 7.0,
   "fat": 0.41,
-  "kcal": 35.0
+  "kcal": 35.0,
+  "diet": "vegan"
  },
  {
   "name": "Pâtes corail",
@@ -405,7 +455,8 @@
   "protein": 25.0,
   "carbs": 47.4,
   "fat": 2.4,
-  "kcal": 335.0
+  "kcal": 335.0,
+  "diet": "vegan"
  },
  {
   "name": "crevettes",
@@ -413,7 +464,8 @@
   "protein": 18.0,
   "carbs": 0.0,
   "fat": 1.0,
-  "kcal": 88.0
+  "kcal": 88.0,
+  "diet": null
  },
  {
   "name": "Steak 5%",
@@ -421,7 +473,8 @@
   "protein": 22.0,
   "carbs": 0.5,
   "fat": 4.6,
-  "kcal": 130.0
+  "kcal": 130.0,
+  "diet": null
  },
  {
   "name": "Legumes basques",
@@ -429,7 +482,8 @@
   "protein": 1.3,
   "carbs": 3.8,
   "fat": 5.9,
-  "kcal": 78.0
+  "kcal": 78.0,
+  "diet": "vegan"
  },
  {
   "name": "Colin Alaska",
@@ -437,7 +491,8 @@
   "protein": 17.0,
   "carbs": 0.0,
   "fat": 0.8,
-  "kcal": 76.0
+  "kcal": 76.0,
+  "diet": null
  },
  {
   "name": "Parmesan",
@@ -445,7 +500,8 @@
   "protein": 32.0,
   "carbs": 0.0,
   "fat": 30.0,
-  "kcal": 402.0
+  "kcal": 402.0,
+  "diet": null
  },
  {
   "name": "carottes",
@@ -453,7 +509,8 @@
   "protein": 0.93,
   "carbs": 9.6,
   "fat": 0.24,
-  "kcal": 41.0
+  "kcal": 41.0,
+  "diet": "vegan"
  },
  {
   "name": "Radis Blanc",
@@ -461,7 +518,8 @@
   "protein": 0.6,
   "carbs": 4.1,
   "fat": 0.1,
-  "kcal": 18.0
+  "kcal": 18.0,
+  "diet": "vegan"
  },
  {
   "name": "sauce soja",
@@ -469,7 +527,8 @@
   "protein": 10.0,
   "carbs": 3.2,
   "fat": 0.0,
-  "kcal": 77.0
+  "kcal": 77.0,
+  "diet": "vegan"
  },
  {
   "name": "Champignons",
@@ -477,7 +536,8 @@
   "protein": 3.1,
   "carbs": 3.3,
   "fat": 0.34,
-  "kcal": 80.0
+  "kcal": 80.0,
+  "diet": "vegan"
  },
  {
   "name": "Gochujang",
@@ -485,7 +545,8 @@
   "protein": 5.0,
   "carbs": 45.0,
   "fat": 2.5,
-  "kcal": 225.0
+  "kcal": 225.0,
+  "diet": "vegan"
  },
  {
   "name": "Foie de veau",
@@ -493,7 +554,8 @@
   "protein": 25.0,
   "carbs": 1.6,
   "fat": 4.0,
-  "kcal": 142.0
+  "kcal": 142.0,
+  "diet": null
  },
  {
   "name": "Tomates",
@@ -501,7 +563,8 @@
   "protein": 0.75,
   "carbs": 3.3,
   "fat": 0.17,
-  "kcal": 18.0
+  "kcal": 18.0,
+  "diet": "vegan"
  },
  {
   "name": "lamelles kebab",
@@ -509,7 +572,8 @@
   "protein": 14.2,
   "carbs": 2.1,
   "fat": 8.77,
-  "kcal": 142.0
+  "kcal": 142.0,
+  "diet": null
  },
  {
   "name": "légumes grecque",
@@ -517,7 +581,8 @@
   "protein": 1.9,
   "carbs": 4.7,
   "fat": 2.9,
-  "kcal": 58.0
+  "kcal": 58.0,
+  "diet": "vegan"
  },
  {
   "name": "A la campagnarde",
@@ -525,7 +590,8 @@
   "protein": 2.1,
   "carbs": 9.6,
   "fat": 3.4,
-  "kcal": 80.0
+  "kcal": 80.0,
+  "diet": null
  },
  {
   "name": "Pommes noisettes",
@@ -533,7 +599,8 @@
   "protein": 2.7,
   "carbs": 26.0,
   "fat": 6.3,
-  "kcal": 178.0
+  "kcal": 178.0,
+  "diet": null
  },
  {
   "name": "nuggets de poulet",
@@ -541,7 +608,8 @@
   "protein": 15.0,
   "carbs": 15.0,
   "fat": 7.9,
-  "kcal": 193.0
+  "kcal": 193.0,
+  "diet": null
  },
  {
   "name": "frites 3 légumes",
@@ -549,7 +617,8 @@
   "protein": 1.6,
   "carbs": 14.0,
   "fat": 6.4,
-  "kcal": 127.0
+  "kcal": 127.0,
+  "diet": "vegan"
  },
  {
   "name": "skyr",
@@ -557,7 +626,8 @@
   "protein": 9.5,
   "carbs": 4.0,
   "fat": 0.0,
-  "kcal": 54.0
+  "kcal": 54.0,
+  "diet": "vege"
  },
  {
   "name": "Joody",
@@ -565,7 +635,8 @@
   "protein": 21.5,
   "carbs": 38.8,
   "fat": 18.5,
-  "kcal": 426.0
+  "kcal": 426.0,
+  "diet": null
  },
  {
   "name": "oeuf",
@@ -573,7 +644,8 @@
   "protein": 6.8,
   "carbs": 0.4,
   "fat": 5.6,
-  "kcal": 79
+  "kcal": 79,
+  "diet": "vege"
  },
  {
   "name": "nuggets unité",
@@ -581,7 +653,8 @@
   "protein": 3,
   "carbs": 3,
   "fat": 1.58,
-  "kcal": 38.6
+  "kcal": 38.6,
+  "diet": null
  },
  {
   "name": "Pommes noisettes unité",
@@ -589,7 +662,8 @@
   "protein": 0.216,
   "carbs": 2.08,
   "fat": 0.504,
-  "kcal": 14.24
+  "kcal": 14.24,
+  "diet": null
  },
  {
   "name": "Moutarde",
@@ -597,7 +671,8 @@
   "protein": 7.6,
   "carbs": 2.6,
   "fat": 10.0,
-  "kcal": 144.0
+  "kcal": 144.0,
+  "diet": "vegan"
  },
  {
   "name": "Ail",
@@ -605,7 +680,8 @@
   "protein": 5.31,
   "carbs": 18.6,
   "fat": 0.5,
-  "kcal": 111.0
+  "kcal": 111.0,
+  "diet": "vegan"
  },
  {
   "name": "wrap",
@@ -613,7 +689,8 @@
   "protein": 5.3,
   "carbs": 31.2,
   "fat": 3.0,
-  "kcal": 175.0
+  "kcal": 175.0,
+  "diet": null
  },
  {
   "name": "concentré de tomates",
@@ -621,7 +698,8 @@
   "protein": 4.4,
   "carbs": 14.0,
   "fat": 0.3,
-  "kcal": 82.0
+  "kcal": 82.0,
+  "diet": "vegan"
  },
  {
   "name": "mayonnaise maison sans huile",
@@ -629,7 +707,8 @@
   "protein": 7.43,
   "carbs": 2.34,
   "fat": 4.25,
-  "kcal": 77.0
+  "kcal": 77.0,
+  "diet": "vege"
  },
  {
   "name": "pain de mie complet harry's",
@@ -637,7 +716,8 @@
   "protein": 3.3,
   "carbs": 18.0,
   "fat": 2.9,
-  "kcal": 120.0
+  "kcal": 120.0,
+  "diet": "vege"
  },
  {
   "name": "Graine de lupin",
@@ -645,7 +725,8 @@
   "protein": 15.0,
   "carbs": 0.5,
   "fat": 5.2,
-  "kcal": 123.0
+  "kcal": 123.0,
+  "diet": "vegan"
  },
  {
   "name": "muesli chocolat amandes",
@@ -653,7 +734,8 @@
   "protein": 5.4,
   "carbs": 26.0,
   "fat": 7.8,
-  "kcal": 202.0
+  "kcal": 202.0,
+  "diet": "vege"
  },
  {
   "name": "Poêlée de gnocchis",
@@ -661,7 +743,8 @@
   "protein": 5.2,
   "carbs": 24.0,
   "fat": 4.1,
-  "kcal": 159.0
+  "kcal": 159.0,
+  "diet": null
  },
  {
   "name": "Tagliatelle saumon",
@@ -669,7 +752,8 @@
   "protein": 5.7,
   "carbs": 12.0,
   "fat": 4.2,
-  "kcal": 110.0
+  "kcal": 110.0,
+  "diet": null
  },
  {
   "name": "tranche toastiligne",
@@ -677,7 +761,8 @@
   "protein": 4.1,
   "carbs": 16.0,
   "fat": 1.1,
-  "kcal": 95.0
+  "kcal": 95.0,
+  "diet": null
  },
  {
   "name": "saint moret leger 8%",
@@ -685,7 +770,8 @@
   "protein": 10.0,
   "carbs": 5.0,
   "fat": 8.0,
-  "kcal": 132.0
+  "kcal": 132.0,
+  "diet": "vege"
  },
  {
   "name": "Cottage cheese zuger",
@@ -693,7 +779,8 @@
   "protein": 13.0,
   "carbs": 3.5,
   "fat": 4.5,
-  "kcal": 107.0
+  "kcal": 107.0,
+  "diet": "vege"
  },
  {
   "name": "Poivrons",
@@ -701,6 +788,7 @@
   "protein": 2.8,
   "carbs": 6.5,
   "fat": 0.2,
-  "kcal": 35.7
+  "kcal": 35.7,
+  "diet": "vegan"
  }
 ]

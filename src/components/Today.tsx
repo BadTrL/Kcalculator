@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { macrosFor, sum, targets } from '../lib/calc'
+import { macrosFor, portionsOf, scaleMacros, sum, targets } from '../lib/calc'
 import { activeMenus, addItemsToDay, deleteEntry, newId, saveEntry, useStore } from '../lib/store'
 import { MEALS, type Entry, type Food, type Macros, type Meal, type Menu } from '../lib/types'
 import { FoodPicker } from './FoodPicker'
@@ -64,10 +64,14 @@ function AddEntry({ meal, date, entry, onClose }: { meal: Meal; date: string; en
 
 function MenuOption({ menu, onPick }: { menu: Menu; onPick: () => void }) {
   const total = useMenuTotals(menu.items)
+  const portions = portionsOf(menu)
   return (
     <li onClick={onPick} tabIndex={0} onKeyDown={(k) => k.key === 'Enter' && onPick()}>
-      <strong>{menu.name}</strong>
-      <MacroLine m={total} />
+      <strong>
+        {menu.name}
+        {portions > 1 && <span className="badge batch">1 portion sur {portions}</span>}
+      </strong>
+      <MacroLine m={scaleMacros(total, 1 / portions)} />
     </li>
   )
 }
@@ -88,7 +92,7 @@ function MenuChooser({ meal, date, onClose }: { meal: Meal; date: string; onClos
               key={m.id}
               menu={m}
               onPick={() => {
-                addItemsToDay(m.items, date, meal)
+                addItemsToDay(m.items, date, meal, portionsOf(m))
                 onClose()
               }}
             />

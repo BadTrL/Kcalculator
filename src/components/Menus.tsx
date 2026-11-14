@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { macrosFor, sum } from '../lib/calc'
+import { dietMatches, macrosFor, menuDiet, portionQty, portionsOf, scaleMacros, sum } from '../lib/calc'
 import { iso } from '../lib/date'
-import { activeMenus, addItemsToDay, deleteMenu, newId, saveMenu, useStore } from '../lib/store'
-import { MEALS, type Food, type Macros, type Meal, type Menu, type MenuItem } from '../lib/types'
+import { activeMenus, addDays, addItemsToDay, deleteMenu, newId, saveMenu, useStore } from '../lib/store'
+import { MEALS, type Diet, type Food, type Macros, type Meal, type Menu, type MenuItem } from '../lib/types'
+import { DietBadge, DietFilter } from './Diet'
 import { FoodPicker } from './FoodPicker'
 
 const r = (x: number) => Math.round(x)
@@ -11,6 +12,13 @@ export function useMenuTotals(items: MenuItem[]): Macros {
   const foods = useStore((s) => s.foods)
   return useMemo(() => sum(items.filter((it) => foods[it.food_id]).map((it) => macrosFor(foods[it.food_id], it.qty))), [items, foods])
 }
+
+export function useMenuDiet(items: MenuItem[]): Diet | null {
+  const foods = useStore((s) => s.foods)
+  return useMemo(() => menuDiet(items.map((it) => foods[it.food_id])), [items, foods])
+}
+
+const fmtDate = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
 
 export function MacroLine({ m }: { m: Macros }) {
   return (
@@ -28,8 +36,11 @@ export function MenuEditor({ menu, onClose }: { menu: Partial<Menu>; onClose: (s
   const foods = useStore((s) => s.foods)
   const [name, setName] = useState(menu.name ?? '')
   const [items, setItems] = useState<MenuItem[]>(menu.items ?? [])
+  const [portionsTxt, setPortionsTxt] = useState(String(portionsOf(menu)))
+  const portions = portionsOf({ portions: parseInt(portionsTxt, 10) })
   const [picking, setPicking] = useState<{ index: number | null } | null>(null)
   const total = useMenuTotals(items)
+  const diet = useMenuDiet(items)
   const editingItem = picking?.index != null ? items[picking.index] : undefined
 
   return (
@@ -39,7 +50,7 @@ export function MenuEditor({ menu, onClose }: { menu: Partial<Menu>; onClose: (s
         onSubmit={(e) => {
           e.preventDefault()
           if (!name.trim() || items.length === 0) return
-          onClose(saveMenu({ id: menu.id ?? newId(), name: name.trim(), items }))
+          onClose(saveMenu({ id: menu.id ?? newId(), name: name.trim(), items, portions }))
         }}
       >
         <div className="sheet-head">
@@ -47,6 +58,15 @@ export function MenuEditor({ menu, onClose }: { menu: Partial<Menu>; onClose: (s
           <button type="button" className="ghost" onClick={() => onClose()} aria-label="Fermer">✕</button>
         </div>
         <label>Nom du menu<input autoFocus={!menu.name} required value={name} onChange={(e) => setName(e.target.value)} placeholder="ex. Petit-déj avoine whey" /></label>
+        <label>
+          Batch cooking : préparé pour combien de jours ?
+          <input type="number" min={1} max={30} inputMode="numeric" value={portionsTxt} onChange={(e) => setPortionsTxt(e.target.value)} />
+        </label>
+        {portions > 1 && (
+          <p className="muted small">
+            Saisis les quantités totales à cuisiner. Chaque jour, tu manges une portion : les quantités divisées par {portions}.
+          </p>
+        )}
 
         <ul className="list compact">
           {items.map((it, i) => {
@@ -55,7 +75,10 @@ export function MenuEditor({ menu, onClose }: { menu: Partial<Menu>; onClose: (s
               <li key={i} onClick={() => f && setPicking({ index: i })} tabIndex={0} onKeyDown={(k) => k.key === 'Enter' && f && setPicking({ index: i })}>
                 <div>
                   <span>{f ? f.name : 'Aliment supprimé'}</span>
-                  <span className="muted small">{it.qty} {f?.unit ?? ''}</span>
+                  <span className="muted small">
+                    {it.qty} {f?.unit ?? ''}
+                    {f && portions > 1 && ` · ${portionQty(it.qty, portions, f.unit)} ${f.unit} / jour`}
+                  </span>
                 </div>
                 <span className="small">{f ? r(macrosFor(f, it.qty).kcal) : 0} kcal</span>
               </li>
@@ -65,9 +88,17 @@ export function MenuEditor({ menu, onClose }: { menu: Partial<Menu>; onClose: (s
         <button type="button" className="ghost add-line" onClick={() => setPicking({ index: null })}>+ Ajouter un aliment</button>
 
         <div className="menu-total">
-          <span>Total</span>
+          <span>
+            {portions > 1 ? `À cuisiner (${portions} jours)` : 'Total'} <DietBadge diet={diet} />
+          </span>
           <MacroLine m={total} />
         </div>
+        {portions > 1 && (
+          <div className="menu-total portion">
+            <span>Par jour (1 portion)</span>
+            <MacroLine m={scaleMacros(total, 1 / portions)} />
+          </div>
+        )}
 
         <div className="row end">
           {menu.id && (
@@ -106,7 +137,10 @@ export function MenuEditor({ menu, onClose }: { menu: Partial<Menu>; onClose: (s
 
 /** Choix du jour et du repas où ajouter un menu. */
 function AddToJournal({ menu, onClose }: { menu: Menu; onClose: (msg?: string) => void }) {
+  const portions = portionsOf(menu)
   const [date, setDate] = useState(() => iso(new Date()))
+  const [spread, setSpread] = useState(true)
+  const days = portions > 1 && spread ? portions : 1
   const [meal, setMeal] = useState<Meal>(() => {
     const h = new Date().getHours()
     return h < 11 ? 'Matin' : h < 15 ? 'Midi' : h < 18 ? 'Collation' : 'Soir'
@@ -117,15 +151,27 @@ function AddToJournal({ menu, onClose }: { menu: Menu; onClose: (msg?: string) =
         className="sheet"
         onSubmit={(e) => {
           e.preventDefault()
-          const n = addItemsToDay(menu.items, date, meal)
-          onClose(`« ${menu.name} » ajouté au repas ${meal} (${n} aliment${n > 1 ? 's' : ''}).`)
+          addItemsToDay(menu.items, date, meal, portions, days)
+          onClose(
+            days > 1
+              ? `Une portion de « ${menu.name} » ajoutée au repas ${meal}, du ${fmtDate(date)} au ${fmtDate(addDays(date, days - 1))}.`
+              : portions > 1
+                ? `Une portion de « ${menu.name} » (1/${portions}) ajoutée au repas ${meal}.`
+                : `« ${menu.name} » ajouté au repas ${meal}.`,
+          )
         }}
       >
         <div className="sheet-head">
           <h2>Ajouter « {menu.name} »</h2>
           <button type="button" className="ghost" onClick={() => onClose()} aria-label="Fermer">✕</button>
         </div>
-        <label>Jour<input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
+        <label>{days > 1 ? 'Premier jour' : 'Jour'}<input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
+        {portions > 1 && (
+          <label className="check">
+            <input type="checkbox" checked={spread} onChange={(e) => setSpread(e.target.checked)} />
+            Batch cooking : ajouter une portion chaque jour pendant {portions} jours
+          </label>
+        )}
         <div className="seg">
           {MEALS.map((m) => (
             <button type="button" key={m} className={meal === m ? 'on' : ''} onClick={() => setMeal(m)}>{m}</button>
@@ -140,12 +186,24 @@ function AddToJournal({ menu, onClose }: { menu: Menu; onClose: (msg?: string) =
 function MenuCard({ menu, onEdit, onAdd }: { menu: Menu; onEdit: () => void; onAdd: () => void }) {
   const foods = useStore((s) => s.foods)
   const total = useMenuTotals(menu.items)
+  const diet = useMenuDiet(menu.items)
+  const portions = portionsOf(menu)
   return (
     <div className="card menu-card">
       <div className="menu-card-body" onClick={onEdit} tabIndex={0} onKeyDown={(k) => k.key === 'Enter' && onEdit()}>
-        <h3>{menu.name}</h3>
+        <h3>
+          {menu.name} <DietBadge diet={diet} />
+          {portions > 1 && <span className="badge batch">Batch {portions} j</span>}
+        </h3>
         <p className="muted small">{menu.items.map((it) => foods[it.food_id]?.name).filter(Boolean).join(', ')}</p>
-        <MacroLine m={total} />
+        {portions > 1 ? (
+          <>
+            <MacroLine m={scaleMacros(total, 1 / portions)} />
+            <p className="muted small">par jour · total à cuisiner {Math.round(total.kcal)} kcal</p>
+          </>
+        ) : (
+          <MacroLine m={total} />
+        )}
       </div>
       <button className="secondary" onClick={onAdd}>+ Journal</button>
     </div>
@@ -158,7 +216,15 @@ export function Menus() {
   const [edit, setEdit] = useState<Partial<Menu> | null>(null)
   const [adding, setAdding] = useState<Menu | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
-  const list = q.trim() ? menus.filter((m) => m.name.toLowerCase().includes(q.trim().toLowerCase())) : menus
+  const [diet, setDiet] = useState<Diet | null>(null)
+  const [batchOnly, setBatchOnly] = useState(false)
+  const foods = useStore((s) => s.foods)
+  const list = menus.filter(
+    (m) =>
+      (!q.trim() || m.name.toLowerCase().includes(q.trim().toLowerCase())) &&
+      (!diet || dietMatches(menuDiet(m.items.map((it) => foods[it.food_id])), diet)) &&
+      (!batchOnly || portionsOf(m) > 1),
+  )
 
   return (
     <section>
@@ -166,10 +232,17 @@ export function Menus() {
         <input type="search" placeholder={`Rechercher parmi ${menus.length} menus`} value={q} onChange={(e) => setQ(e.target.value)} />
         <button onClick={() => setEdit({})}>+ Nouveau menu</button>
       </div>
+      <div className="filters">
+        <DietFilter value={diet} onChange={setDiet} />
+        <button type="button" className={batchOnly ? 'chip on' : 'chip'} aria-pressed={batchOnly} onClick={() => setBatchOnly(!batchOnly)}>
+          Batch cooking
+        </button>
+      </div>
       {msg && <p className="note">{msg}</p>}
       {list.map((m) => (
         <MenuCard key={m.id} menu={m} onEdit={() => setEdit(m)} onAdd={() => setAdding(m)} />
       ))}
+      {menus.length > 0 && list.length === 0 && <p className="muted">Aucun menu ne correspond à ces filtres.</p>}
       {menus.length === 0 && (
         <div className="card empty">
           <p><strong>Aucun menu enregistré.</strong></p>

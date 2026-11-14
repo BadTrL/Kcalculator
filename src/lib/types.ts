@@ -1,5 +1,8 @@
 export type Unit = 'g' | 'ml' | 'u'
 
+/** Régime compatible : 'vegan' (aucun produit animal) ou 'vege' (végétarien : œufs, lait, miel possibles). */
+export type Diet = 'vege' | 'vegan'
+
 /** Valeurs nutritionnelles pour 100 g / 100 ml, ou pour 1 unité si unit === 'u'. */
 export interface Food {
   id: string
@@ -11,6 +14,7 @@ export interface Food {
   kcal: number
   barcode?: string | null
   brand?: string | null
+  diet?: Diet | null // null = contient de la viande / du poisson, ou non renseigné
   updated_at: string
   deleted?: boolean
 }
@@ -58,7 +62,8 @@ export interface MenuItem {
 export interface Menu {
   id: string
   name: string
-  items: MenuItem[]
+  items: MenuItem[] // quantités totales à cuisiner
+  portions?: number // batch cooking : nombre de jours / portions (1 par défaut)
   updated_at: string
   deleted?: boolean
 }
