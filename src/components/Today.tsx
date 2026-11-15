@@ -6,6 +6,7 @@ import { FoodPicker } from './FoodPicker'
 import { iso } from '../lib/date'
 import { MacroLine, MenuEditor, useMenuTotals } from './Menus'
 import { Calendar } from './Calendar'
+import { PhotoMeal } from './PhotoMeal'
 
 const r = (x: number) => Math.round(x)
 const qtyUnit = (f: Food) => (f.unit === 'u' ? 'u' : f.unit)
@@ -112,6 +113,7 @@ export function Today() {
   const [saving, setSaving] = useState<Partial<Menu> | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [calendar, setCalendar] = useState(false)
+  const [photo, setPhoto] = useState<Meal | null>(null)
   const entries = useStore((s) => s.entries)
   const foods = useStore((s) => s.foods)
   const profile = useStore((s) => s.profile)
@@ -181,6 +183,7 @@ export function Today() {
             <div className="meal-actions">
               <button className="ghost add-line" onClick={() => setAdding({ meal })}>+ Aliment</button>
               <button className="ghost add-line" onClick={() => setChoosing(meal)}>+ Menu</button>
+              <button className="ghost add-line" onClick={() => setPhoto(meal)}>📷 Photo</button>
               {rows.length > 0 && (
                 <button
                   className="ghost add-line save-menu"
@@ -201,6 +204,16 @@ export function Today() {
           onClose={(saved) => {
             setSaving(null)
             if (saved) setMsg(`Menu « ${saved.name} » enregistré. Retrouve-le dans l'onglet Mes menus.`)
+          }}
+        />
+      )}
+      {photo && (
+        <PhotoMeal
+          date={date}
+          meal={photo}
+          onClose={(m) => {
+            setPhoto(null)
+            if (m) setMsg(m)
           }}
         />
       )}

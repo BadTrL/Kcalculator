@@ -230,3 +230,31 @@ label.check input { width: auto; }
   .cal-day.has.low { background: #713f12; color: #fde68a; }
   .cal-day.has.high { background: #7f1d1d; color: #fecaca; }
 }
+
+/* IA : plat en photo */
+.photo-drop { display: flex; align-items: center; justify-content: center; min-height: 160px; border: 2px dashed var(--line); border-radius: var(--radius); cursor: pointer; color: var(--accent); font-weight: 600; font-size: 1rem; overflow: hidden; margin: 4px 0 10px; }
+.photo-drop.has { border-style: solid; padding: 0; }
+.photo-drop img { width: 100%; max-height: 300px; object-fit: cover; display: block; }
+.photo-head { display: flex; gap: 12px; align-items: center; margin: 4px 0 10px; }
+.photo-head img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; flex: none; }
+.photo-head > div { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.photo-head .badge { margin-left: 0; }
+.badge.conf-bonne { background: var(--accent-soft); color: var(--accent); }
+.badge.conf-moyenne { background: var(--line); color: var(--text); }
+.badge.conf-faible { background: var(--line); color: var(--danger); }
+.ai-items li { display: grid; grid-template-columns: 1fr auto auto auto; gap: 4px 8px; align-items: center; }
+.ai-items li > input { min-width: 0; }
+.ai-items label.inline { flex-direction: row; align-items: center; gap: 4px; margin: 0; }
+.ai-items label.inline input { width: 64px; text-align: right; }
+.ai-items .ai-kcal { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ai-items .ai-macros { grid-column: 1 / -1; }
+.ai-comment { background: var(--accent-soft); border-radius: 10px; padding: 10px 12px; margin-top: 10px; }
+.ai-comment p { margin: 4px 0 0; }
+
+/* IA : coach */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.chips button { text-align: left; }
+.chat { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.bubble { max-width: 88%; padding: 8px 12px; border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bubble.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.bubble.assistant { align-self: flex-start; background: var(--bg); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
