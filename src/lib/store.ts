@@ -1,6 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import seed from '../data/seedFoods.json'
 import { portionQty } from './calc'
+import { iso } from './date'
 import type { Diet, Entry, Food, Meal, Menu, MenuItem, Profile, Unit } from './types'
 
 /**
@@ -163,7 +164,18 @@ export function deleteEntry(id: string) {
 }
 
 export function saveProfile(p: Omit<Profile, 'updated_at'>) {
-  setState({ ...state, profile: { ...p, updated_at: now() }, dirty: { ...state.dirty, profile: true } })
+  // On garde les champs que le formulaire du profil ne connaît pas (ex. cheatMeals).
+  setState({ ...state, profile: { ...state.profile, ...p, updated_at: now() }, dirty: { ...state.dirty, profile: true } })
+}
+
+/** Marque / démarque un repas du journal comme cheat meal. On ne garde que les 6 derniers mois. */
+export function toggleCheat(date: string, meal: Meal) {
+  const key = `${date}|${meal}`
+  const list = state.profile.cheatMeals ?? []
+  const today = iso(new Date())
+  const limit = addDays(date < today ? today : date, -183)
+  const next = (list.includes(key) ? list.filter((k) => k !== key) : [...list, key]).filter((k) => k.slice(0, 10) >= limit).sort()
+  saveProfile({ ...state.profile, cheatMeals: next })
 }
 
 export function saveMenu(menu: Omit<Menu, 'updated_at'>) {
