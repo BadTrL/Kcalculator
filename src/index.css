@@ -256,5 +256,5 @@ label.check input { width: auto; }
 .chips button { text-align: left; }
 .chat { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
 .bubble { max-width: 88%; padding: 8px 12px; border-radius: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
-.bubble.user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.bubble.user { align-self: flex-end; background: var(--accent); color: var(--on-accent, #fff); border-bottom-right-radius: 4px; }
 .bubble.assistant { align-self: flex-start; background: var(--bg); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
