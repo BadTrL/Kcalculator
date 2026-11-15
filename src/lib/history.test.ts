@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { average, dailyTotals, monthGrid } from './history'
+import { average, dailyTotals, level, monthGrid, weekOf } from './history'
 import type { Entry, Food } from './types'
 
 const rice: Food = { id: 'riz', name: 'Riz', unit: 'g', protein: 7, carbs: 78, fat: 1, kcal: 357, updated_at: '' }
@@ -22,5 +22,18 @@ describe('historique', () => {
   it('fait la moyenne des jours enregistrés', () => {
     expect(average([])).toBeNull()
     expect(average([{ kcal: 2000, protein: 100, carbs: 200, fat: 60 }, { kcal: 2400, protein: 140, carbs: 250, fat: 80 }])?.kcal).toBe(2200)
+  })
+})
+
+describe('weekOf et level', () => {
+  it('donne la semaine du lundi au dimanche', () => {
+    expect(weekOf('2026-11-15')).toEqual(['2026-11-09', '2026-11-10', '2026-11-11', '2026-11-12', '2026-11-13', '2026-11-14', '2026-11-15'])
+    expect(weekOf('2026-11-09')[0]).toBe('2026-11-09')
+    expect(weekOf('2026-01-01')[0]).toBe('2025-12-29')
+  })
+  it('classe un jour selon l’objectif ±10 %', () => {
+    expect(level(2000, 2500)).toBe('low')
+    expect(level(2600, 2500)).toBe('ok')
+    expect(level(2800, 2500)).toBe('high')
   })
 })

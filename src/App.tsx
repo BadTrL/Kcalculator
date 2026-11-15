@@ -6,13 +6,14 @@ import { ProfileView } from './components/ProfileView'
 import { Settings } from './components/Settings'
 import { useStore } from './lib/store'
 import { supabase, sync } from './lib/sync'
+import { TabIcon } from './components/Icons'
 
 const TABS = [
-  { id: 'today', label: 'Journal', icon: '🍽️' },
-  { id: 'menus', label: 'Mes menus', icon: '📋' },
-  { id: 'foods', label: 'Aliments', icon: '🥑' },
-  { id: 'profile', label: 'Profil', icon: '📊' },
-  { id: 'settings', label: 'Réglages', icon: '⚙️' },
+  { id: 'today', label: 'Journal', short: 'Journal' },
+  { id: 'menus', label: 'Mes menus', short: 'Menus' },
+  { id: 'foods', label: 'Aliments', short: 'Aliments' },
+  { id: 'profile', label: 'Profil', short: 'Profil' },
+  { id: 'settings', label: 'Réglages', short: 'Réglages' },
 ] as const
 type Tab = (typeof TABS)[number]['id']
 
@@ -54,7 +55,7 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>Kcalculator</h1>
+        <span className="brand">Kcalculator</span>
         <nav className="tabs top">
           {TABS.map((t) => (
             <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)}>
@@ -64,6 +65,7 @@ export default function App() {
         </nav>
       </header>
       <main>
+        {tab !== 'today' && <h1 className="page-title">{TABS.find((t) => t.id === tab)?.label}</h1>}
         {tab === 'today' && <Today />}
         {tab === 'menus' && <Menus />}
         {tab === 'foods' && <Foods />}
@@ -72,9 +74,9 @@ export default function App() {
       </main>
       <nav className="tabs bottom">
         {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)}>
-            <span aria-hidden>{t.icon}</span>
-            {t.label}
+          <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)} aria-current={tab === t.id ? 'page' : undefined}>
+            <TabIcon id={t.id} />
+            {t.short}
           </button>
         ))}
       </nav>

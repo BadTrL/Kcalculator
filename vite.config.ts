@@ -13,7 +13,7 @@ export default defineConfig({
         short_name: 'Kcalculator',
         description: 'Calcul des calories et macros de tes repas',
         lang: 'fr',
-        theme_color: '#16a34a',
+        theme_color: '#0b7a55',
         background_color: '#0f1412',
         display: 'standalone',
         start_url: '/',

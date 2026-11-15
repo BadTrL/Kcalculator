@@ -6,6 +6,7 @@ import { useBarcodeFlow, useFoodSearch } from './Foods'
 import { DietBadge, DietFilter } from './Diet'
 import type { Diet } from '../lib/types'
 import { LazyScanner as Scanner } from './LazyScanner'
+import { TabIcon } from './Icons'
 
 const r = (x: number) => Math.round(x)
 
@@ -48,7 +49,7 @@ export function FoodPicker({ title, food: initialFood, qty: initialQty, submitLa
           <>
             <div className="toolbar">
               <input autoFocus type="search" placeholder="Rechercher un aliment" value={q} onChange={(e) => setQ(e.target.value)} />
-              <button className="secondary" onClick={() => setScan(true)} aria-label="Scanner">📷</button>
+              <button className="secondary" onClick={() => setScan(true)} aria-label="Scanner un code-barres"><TabIcon id="scan" size={20} /></button>
             </div>
             <DietFilter value={diet} onChange={setDiet} />
             <ul className="list pick">
