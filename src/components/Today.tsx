@@ -8,6 +8,7 @@ import { MacroLine, MenuEditor, useMenuTotals } from './Menus'
 import { Calendar } from './Calendar'
 import { TabIcon } from './Icons'
 import { dailyTotals, level, weekOf } from '../lib/history'
+import { CheatToggle, ProgressCard, ProgressSheet } from './Progress'
 
 const r = (x: number) => Math.round(x)
 const qtyUnit = (f: Food) => (f.unit === 'u' ? 'u' : f.unit)
@@ -148,6 +149,8 @@ export function Today() {
   const [saving, setSaving] = useState<Partial<Menu> | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [calendar, setCalendar] = useState(false)
+  const [progress, setProgress] = useState(false)
+  const cheats = useStore((s) => s.profile.cheatMeals)
   const entries = useStore((s) => s.entries)
   const foods = useStore((s) => s.foods)
   const profile = useStore((s) => s.profile)
@@ -183,16 +186,18 @@ export function Today() {
       </div>
       <WeekStrip date={date} today={today} target={target.kcal} onPick={setDate} onShift={shift} />
       <Summary total={total} target={target} />
+      <ProgressCard date={date} onOpen={() => setProgress(true)} />
       {MEALS.map((meal) => {
         const rows = byMeal[meal]
         const t = sum(rows.map((x) => x.m))
         return (
-          <div className="card meal" key={meal}>
+          <div className={'card meal' + (cheats?.includes(`${date}|${meal}`) ? ' cheat' : '')} key={meal}>
             <div className="meal-head">
               <h3>{meal}</h3>
               <span className="muted small">
                 {r(t.kcal)} kcal · P {r(t.protein)} · G {r(t.carbs)} · L {r(t.fat)}
               </span>
+              <CheatToggle date={date} meal={meal} />
             </div>
             <ul className="list compact">
               {rows.map(({ e, f, m }) => (
@@ -233,6 +238,7 @@ export function Today() {
           }}
         />
       )}
+      {progress && <ProgressSheet date={date} onClose={() => setProgress(false)} />}
       {calendar && <Calendar date={date} onPick={setDate} onClose={() => setCalendar(false)} />}
       {adding && <AddEntry meal={adding.meal} entry={adding.entry} date={date} onClose={() => setAdding(null)} />}
     </section>

@@ -38,7 +38,7 @@ export function ProfileView() {
   }
   const set = (k: keyof typeof p) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setP({ ...p, [k]: e.target.value })
   const t = targets(profile)
-  const changed = JSON.stringify({ ...profile, updated_at: '' }) !== JSON.stringify({ ...stored, updated_at: '' })
+  const changed = JSON.stringify({ ...profile, updated_at: '' }) !== JSON.stringify({ ...stored, cheatMeals: undefined, updated_at: '' })
 
   return (
     <section>
