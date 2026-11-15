@@ -8,11 +8,20 @@ Fonctionne sur téléphone et sur PC (appli web installable), hors ligne, avec s
 - **Journal** : repas du jour (Matin, Midi, Collation, Soir), total kcal et macros, avec la progression vers ton objectif.
 - **Mes menus** : tes repas déjà calculés, enregistrés pour les réutiliser. Dans le Journal, « Enregistrer comme menu » sauvegarde un repas rempli, et « + Menu » l'ajoute en un clic.
 - **Aliments** : ta base d'aliments (tes 88 aliments de l'Excel sont déjà importés). Valeurs pour 100 g, 100 ml ou pour 1 unité.
+- **Végé / vegan** : chaque aliment peut être marqué Végé ou Vegan. Filtre Tous / Végé / Vegan dans Aliments, dans le choix d'un aliment et dans Mes menus (un menu est vegan si tous ses aliments le sont). Le scan pré-remplit le régime quand Open Food Facts le connaît.
+- **Batch cooking** : dans un menu, indique pour combien de repas tu cuisines. Tu saisis les quantités totales, l'appli affiche la portion par repas (quantités divisées par le nombre de repas) avec ses kcal et macros. « + Journal » ajoute une portion au repas choisi, et peut aussi la répéter les jours suivants.
+- **Calendrier** : dans le Journal, touche la date pour ouvrir le calendrier. Chaque jour affiche ses kcal (en couleur selon l'objectif), avec la moyenne du mois. Touche un jour pour revoir ce que tu as mangé.
 - **Scan de code-barres** avec la caméra : l'appli récupère les valeurs sur Open Food Facts, tu vérifies et tu enregistres.
 - **Profil** : même calcul que ton fichier Excel. Katch-McArdle (370 + 21,6 × masse maigre) × activité, objectif sèche / maintien / prise de masse arrondi à 50 kcal, protéines et lipides en g/kg de masse maigre, glucides sur le reste.
 - **Réglages** : connexion pour la synchro, export / import d'une sauvegarde.
 
 Sans Supabase, l'appli marche quand même, mais les données restent sur l'appareil.
+
+## Architecture
+
+Le fonctionnement de l'appli, et le rôle de Supabase et de Vercel, sont expliqués simplement dans [ARCHI.md](ARCHI.md).
+
+En bref : **Vercel** héberge l'appli (il la reconstruit et la met en ligne à chaque push sur `main`), **Supabase** garde tes données et ton compte pour synchroniser téléphone et PC, et l'appli fait tous les calculs sur ton appareil, même hors ligne.
 
 ## Lancer en local
 
@@ -29,6 +38,7 @@ npm run build    # version de production dans dist/
 
 1. Crée un compte sur https://supabase.com, puis un nouveau projet.
 2. Va dans **SQL Editor → New query**, colle le contenu de `supabase/schema.sql` et clique sur **Run**.
+   Projet Supabase déjà installé avec une version précédente : lance à la place les fichiers de `supabase/migrations/` qui n'ont pas encore été lancés (par exemple `002_vege_batch.sql`).
 3. Dans **Project Settings → API**, copie l'**URL du projet** et la clé **anon public**.
 4. (Facultatif) Dans **Authentication → Sign In / Providers → Email**, tu peux désactiver « Confirm email » pour te connecter sans valider l'e-mail.
 
@@ -62,5 +72,6 @@ src/lib/sync.ts        synchro Supabase
 src/lib/off.ts         recherche Open Food Facts
 src/components/        écrans (Journal, Mes menus, Aliments, Profil, Réglages, scanner)
 src/data/seedFoods.json  aliments importés de l'Excel
-supabase/schema.sql    tables et règles d'accès
+supabase/schema.sql    tables et règles d'accès (nouveau projet)
+supabase/migrations/   changements de tables pour un projet existant
 ```

@@ -1,4 +1,4 @@
-import type { Food, Macros, Profile } from './types'
+import type { Diet, Food, Macros, Profile } from './types'
 
 export const ACTIVITY_LEVELS = [
   { value: 1.15, label: 'Peu ou pas de sport' },
@@ -59,4 +59,42 @@ export function sum(list: Macros[]): Macros {
 
 export function unitLabel(food: Pick<Food, 'unit'>) {
   return food.unit === 'u' ? 'pour 1 unité' : `pour 100 ${food.unit}`
+}
+
+// ---------- Végé / vegan ----------
+
+export const DIET_LABEL: Record<Diet, string> = { vege: 'Végé', vegan: 'Vegan' }
+
+/** Un aliment vegan convient aussi à un repas végé. */
+export function dietMatches(diet: Diet | null | undefined, filter: Diet | null): boolean {
+  if (!filter) return true
+  if (filter === 'vege') return diet === 'vege' || diet === 'vegan'
+  return diet === 'vegan'
+}
+
+/** Régime d'un menu : vegan si tous ses aliments le sont, végé si tous sont au moins végé. */
+export function menuDiet(foods: (Pick<Food, 'diet'> | undefined)[]): Diet | null {
+  const list = foods.filter((f): f is Pick<Food, 'diet'> => !!f)
+  if (list.length === 0) return null
+  if (list.every((f) => f.diet === 'vegan')) return 'vegan'
+  if (list.every((f) => dietMatches(f.diet, 'vege'))) return 'vege'
+  return null
+}
+
+// ---------- Batch cooking ----------
+
+export function portionsOf(menu: { portions?: number | null }) {
+  const n = Math.floor(menu.portions ?? 1)
+  return n >= 1 ? n : 1
+}
+
+/** Quantité d'une portion, arrondie au dixième (au centième pour les unités). */
+export function portionQty(total: number, portions: number, unit: Food['unit']) {
+  const q = total / Math.max(1, portions)
+  const p = unit === 'u' ? 100 : 10
+  return Math.round(q * p) / p
+}
+
+export function scaleMacros(m: Macros, k: number): Macros {
+  return { protein: m.protein * k, carbs: m.carbs * k, fat: m.fat * k, kcal: m.kcal * k }
 }

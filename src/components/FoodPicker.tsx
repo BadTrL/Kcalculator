@@ -3,6 +3,8 @@ import { macrosFor } from '../lib/calc'
 import type { Food } from '../lib/types'
 import { FoodForm, type FoodDraft } from './FoodForm'
 import { useBarcodeFlow, useFoodSearch } from './Foods'
+import { DietBadge, DietFilter } from './Diet'
+import type { Diet } from '../lib/types'
 import { LazyScanner as Scanner } from './LazyScanner'
 
 const r = (x: number) => Math.round(x)
@@ -24,7 +26,8 @@ export function FoodPicker({ title, food: initialFood, qty: initialQty, submitLa
   const [q, setQ] = useState('')
   const [scan, setScan] = useState(false)
   const [draft, setDraft] = useState<FoodDraft | null>(null)
-  const list = useFoodSearch(q)
+  const [diet, setDiet] = useState<Diet | null>(null)
+  const list = useFoodSearch(q, diet)
   const editing = initialFood != null
   const pick = (f: Food) => {
     setFood(f)
@@ -47,14 +50,17 @@ export function FoodPicker({ title, food: initialFood, qty: initialQty, submitLa
               <input autoFocus type="search" placeholder="Rechercher un aliment" value={q} onChange={(e) => setQ(e.target.value)} />
               <button className="secondary" onClick={() => setScan(true)} aria-label="Scanner">📷</button>
             </div>
+            <DietFilter value={diet} onChange={setDiet} />
             <ul className="list pick">
               {list.slice(0, 60).map((f) => (
                 <li key={f.id} onClick={() => pick(f)} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && pick(f)}>
-                  <strong>{f.name}</strong>
+                  <strong>
+                    {f.name} <DietBadge diet={f.diet} />
+                  </strong>
                   <span className="muted small">{r(f.kcal)} kcal {f.unit === 'u' ? '/ u' : `/ 100 ${f.unit}`}</span>
                 </li>
               ))}
-              <li className="add" onClick={() => setDraft({ name: q })}>+ Créer « {q || 'nouvel aliment'} »</li>
+              <li className="add" onClick={() => setDraft({ name: q, diet })}>+ Créer « {q || 'nouvel aliment'} »</li>
             </ul>
           </>
         ) : (

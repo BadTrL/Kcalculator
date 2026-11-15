@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { deleteFood, newId, saveFood } from '../lib/store'
 import { lookupBarcode } from '../lib/off'
-import type { Food, Unit } from '../lib/types'
+import type { Diet, Food, Unit } from '../lib/types'
 import { LazyScanner as Scanner } from './LazyScanner'
 
 export type FoodDraft = Partial<Omit<Food, 'updated_at'>>
@@ -26,6 +26,7 @@ export function FoodForm({ initial, onClose }: Props) {
     fat: String(initial.fat ?? ''),
     kcal: String(initial.kcal ?? ''),
     barcode: initial.barcode ?? '',
+    diet: (initial.diet ?? '') as Diet | '',
   })
   const [scan, setScan] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
@@ -54,6 +55,7 @@ export function FoodForm({ initial, onClose }: Props) {
         carbs: String(p.carbs),
         fat: String(p.fat),
         kcal: String(p.kcal),
+        diet: p.diet ?? x.diet,
       }))
       setMsg('Valeurs récupérées. Vérifie-les avec l\'étiquette avant d\'enregistrer.')
     } catch {
@@ -75,6 +77,7 @@ export function FoodForm({ initial, onClose }: Props) {
       fat: num(f.fat),
       kcal: num(f.kcal) || Math.round(theo),
       barcode: f.barcode.trim() || null,
+      diet: f.diet || null,
     })
     onClose(saved)
   }
@@ -116,6 +119,14 @@ export function FoodForm({ initial, onClose }: Props) {
           Valeurs {per}. Kcal théoriques d'après les macros : {Math.round(theo)}
           {gap && ' (écart important, vérifie les valeurs)'}
         </p>
+        <label>
+          Régime
+          <select value={f.diet} onChange={set('diet')}>
+            <option value="">Viande, poisson ou non renseigné</option>
+            <option value="vege">Végé (végétarien : œufs, lait possibles)</option>
+            <option value="vegan">Vegan (aucun produit animal)</option>
+          </select>
+        </label>
         <label>Code-barres<input inputMode="numeric" value={f.barcode} onChange={set('barcode')} /></label>
 
         <div className="row end">

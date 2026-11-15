@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
-import { macrosFor, sum, targets } from '../lib/calc'
+import { macrosFor, portionsOf, scaleMacros, sum, targets } from '../lib/calc'
 import { activeMenus, addItemsToDay, deleteEntry, newId, saveEntry, useStore } from '../lib/store'
 import { MEALS, type Entry, type Food, type Macros, type Meal, type Menu } from '../lib/types'
 import { FoodPicker } from './FoodPicker'
 import { iso } from '../lib/date'
 import { MacroLine, MenuEditor, useMenuTotals } from './Menus'
+import { Calendar } from './Calendar'
 
 const r = (x: number) => Math.round(x)
 const qtyUnit = (f: Food) => (f.unit === 'u' ? 'u' : f.unit)
@@ -64,10 +65,14 @@ function AddEntry({ meal, date, entry, onClose }: { meal: Meal; date: string; en
 
 function MenuOption({ menu, onPick }: { menu: Menu; onPick: () => void }) {
   const total = useMenuTotals(menu.items)
+  const portions = portionsOf(menu)
   return (
     <li onClick={onPick} tabIndex={0} onKeyDown={(k) => k.key === 'Enter' && onPick()}>
-      <strong>{menu.name}</strong>
-      <MacroLine m={total} />
+      <strong>
+        {menu.name}
+        {portions > 1 && <span className="badge batch">1 repas sur {portions}</span>}
+      </strong>
+      <MacroLine m={scaleMacros(total, 1 / portions)} />
     </li>
   )
 }
@@ -88,7 +93,7 @@ function MenuChooser({ meal, date, onClose }: { meal: Meal; date: string; onClos
               key={m.id}
               menu={m}
               onPick={() => {
-                addItemsToDay(m.items, date, meal)
+                addItemsToDay(m.items, date, meal, portionsOf(m))
                 onClose()
               }}
             />
@@ -106,6 +111,7 @@ export function Today() {
   const [choosing, setChoosing] = useState<Meal | null>(null)
   const [saving, setSaving] = useState<Partial<Menu> | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
+  const [calendar, setCalendar] = useState(false)
   const entries = useStore((s) => s.entries)
   const foods = useStore((s) => s.foods)
   const profile = useStore((s) => s.profile)
@@ -136,9 +142,17 @@ export function Today() {
     <section>
       <div className="datebar">
         <button className="ghost" onClick={() => shift(-1)} aria-label="Jour précédent">‹</button>
-        <button className="ghost date" onClick={() => setDate(today)}>{label}</button>
+        <button className="ghost date" onClick={() => setCalendar(true)} aria-label="Ouvrir le calendrier">
+          <span aria-hidden>📅 </span>
+          {label}
+        </button>
         <button className="ghost" onClick={() => shift(1)} aria-label="Jour suivant">›</button>
       </div>
+      {date !== today && (
+        <p className="back-today">
+          <button className="ghost small" onClick={() => setDate(today)}>Revenir à aujourd'hui</button>
+        </p>
+      )}
       <Summary total={total} target={target} />
       {MEALS.map((meal) => {
         const rows = byMeal[meal]
@@ -190,6 +204,7 @@ export function Today() {
           }}
         />
       )}
+      {calendar && <Calendar date={date} onPick={setDate} onClose={() => setCalendar(false)} />}
       {adding && <AddEntry meal={adding.meal} entry={adding.entry} date={date} onClose={() => setAdding(null)} />}
     </section>
   )

@@ -1,6 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import seed from '../data/seedFoods.json'
-import type { Entry, Food, Meal, Menu, MenuItem, Profile, Unit } from './types'
+import { portionQty } from './calc'
+import type { Diet, Entry, Food, Meal, Menu, MenuItem, Profile, Unit } from './types'
 
 /**
  * Stockage local d'abord : tout est enregistré sur l'appareil (localStorage),
@@ -28,12 +29,28 @@ const slug = (s: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 
+type SeedFood = { name: string; unit: Unit; protein: number; carbs: number; fat: number; kcal: number; diet?: Diet | null }
+
 function seedFoods(): Record<string, Food> {
   const out: Record<string, Food> = {}
-  for (const f of seed as { name: string; unit: Unit; protein: number; carbs: number; fat: number; kcal: number }[]) {
+  for (const f of seed as SeedFood[]) {
     // Identifiant stable : le même aliment importé sur deux appareils ne crée pas de doublon.
     const id = 'seed-' + slug(f.name)
-    out[id] = { id, ...f, barcode: null, brand: null, updated_at: SEED_DATE }
+    out[id] = { id, ...f, diet: f.diet ?? null, barcode: null, brand: null, updated_at: SEED_DATE }
+  }
+  return out
+}
+
+/**
+ * Les sauvegardes d'avant la catégorie végé/vegan n'ont pas de champ diet.
+ * On le complète pour les aliments importés que l'utilisateur n'a jamais modifiés.
+ */
+function backfillDiet(foods: Record<string, Food>, base: Record<string, Food>) {
+  const out = { ...foods }
+  for (const [id, f] of Object.entries(out)) {
+    if (f.diet !== undefined) continue
+    const b = base[id]
+    out[id] = { ...f, diet: b && f.updated_at === SEED_DATE ? b.diet ?? null : null }
   }
   return out
 }
@@ -69,7 +86,8 @@ function load(): State {
       const base = initial()
       const saved = JSON.parse(raw) as Partial<State>
       // Les anciennes sauvegardes n'ont pas forcément tous les champs (ex. menus).
-      return { ...base, ...saved, dirty: { ...base.dirty, menus: [], ...saved.dirty } }
+      const foods = saved.foods ? backfillDiet(saved.foods, base.foods) : base.foods
+      return { ...base, ...saved, foods, dirty: { ...base.dirty, menus: [], ...saved.dirty } }
     }
   } catch {
     /* stockage indisponible : on repart des valeurs par défaut */
@@ -163,16 +181,31 @@ export function deleteMenu(id: string) {
   if (m) saveMenu({ ...m, deleted: true })
 }
 
-/** Ajoute tous les aliments d'un menu au repas choisi du journal. */
-export function addItemsToDay(items: MenuItem[], date: string, meal: Meal) {
+/** Jour suivant / précédent d'une date AAAA-MM-JJ. */
+export function addDays(date: string, n: number) {
+  const d = new Date(date + 'T12:00:00Z')
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+
+/**
+ * Ajoute tous les aliments d'un menu au repas choisi du journal.
+ * portions > 1 (batch cooking) : on ajoute une portion, c.-à-d. les quantités divisées par portions,
+ * sur `days` jours consécutifs à partir de `date`.
+ */
+export function addItemsToDay(items: MenuItem[], date: string, meal: Meal, portions = 1, days = 1) {
   const t = now()
   const entries = { ...state.entries }
   const ids: string[] = []
-  for (const it of items) {
-    if (!state.foods[it.food_id] || state.foods[it.food_id].deleted) continue
-    const id = newId()
-    entries[id] = { id, date, meal, food_id: it.food_id, qty: it.qty, updated_at: t }
-    ids.push(id)
+  for (let d = 0; d < Math.max(1, days); d++) {
+    const day = addDays(date, d)
+    for (const it of items) {
+      const food = state.foods[it.food_id]
+      if (!food || food.deleted) continue
+      const id = newId()
+      entries[id] = { id, date: day, meal, food_id: it.food_id, qty: portions > 1 ? portionQty(it.qty, portions, food.unit) : it.qty, updated_at: t }
+      ids.push(id)
+    }
   }
   setState({ ...state, entries, dirty: { ...state.dirty, entries: uniq([...state.dirty.entries, ...ids]) } })
   return ids.length

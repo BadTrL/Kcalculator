@@ -65,6 +65,23 @@ async function fetchSince(sb: SupabaseClient, table: string, since: string) {
 const TABLES = ['foods', 'entries', 'menus'] as const
 type Row = { id: string; updated_at: string; deleted?: boolean }
 
+// Colonnes ajoutées par supabase/migrations/002_vege_batch.sql. Toujours envoyées avec une valeur,
+// pour ne jamais écraser une colonne « not null » avec null.
+const NEW_COLUMNS: Partial<Record<(typeof TABLES)[number], Record<string, unknown>>> = {
+  foods: { diet: null },
+  menus: { portions: 1 },
+}
+/** Passe à true si le projet Supabase n'a pas encore la migration 002 (colonne inconnue). */
+let missingMigration = false
+const isMissingColumn = (e: { code?: string; message?: string }) =>
+  e.code === 'PGRST204' || /could not find the '.*' column/i.test(e.message ?? '')
+
+function withoutNewColumns(t: (typeof TABLES)[number], row: Record<string, unknown>) {
+  const out = { ...row }
+  for (const k of Object.keys(NEW_COLUMNS[t] ?? {})) delete out[k]
+  return out
+}
+
 /** Envoie les changements locaux puis récupère ceux des autres appareils (le plus récent gagne). */
 export async function sync(): Promise<string> {
   const sb = supabase()
@@ -80,10 +97,20 @@ export async function sync(): Promise<string> {
     const uid = user.id
 
     // 1. Envoi
+    missingMigration = false
     for (const t of TABLES) {
-      const rows = (s.dirty[t].map((id) => s[t][id]).filter(Boolean) as Row[]).map((r) => ({ ...r, deleted: !!r.deleted, user_id: uid }))
+      const rows = (s.dirty[t].map((id) => s[t][id]).filter(Boolean) as Row[]).map(
+        (r) => ({ ...NEW_COLUMNS[t], ...r, deleted: !!r.deleted, user_id: uid }) as Record<string, unknown>,
+      )
+      for (const k of Object.keys(NEW_COLUMNS[t] ?? {})) for (const r of rows) r[k] ??= NEW_COLUMNS[t]![k]
       for (let i = 0; i < rows.length; i += 500) {
-        const { error } = await sb.from(t).upsert(rows.slice(i, i + 500), { onConflict: 'user_id,id' })
+        const chunk = rows.slice(i, i + 500)
+        let { error } = await sb.from(t).upsert(missingMigration ? chunk.map((r) => withoutNewColumns(t, r)) : chunk, { onConflict: 'user_id,id' })
+        // Base pas encore migrée : on synchronise quand même, sans les nouvelles colonnes.
+        if (error && NEW_COLUMNS[t] && isMissingColumn(error)) {
+          missingMigration = true
+          ;({ error } = await sb.from(t).upsert(chunk.map((r) => withoutNewColumns(t, r)), { onConflict: 'user_id,id' }))
+        }
         if (error) throw error
       }
     }
@@ -141,7 +168,19 @@ export async function sync(): Promise<string> {
       },
       lastSync: mark,
     })
-    return 'Synchronisé'
+    // Une fois la migration lancée, on renvoie tout une fois pour remplir les nouvelles colonnes.
+    const RESEND = 'kcalculator:resend-new-columns'
+    try {
+      if (missingMigration) localStorage.setItem(RESEND, '1')
+      else if (localStorage.getItem(RESEND)) {
+        localStorage.removeItem(RESEND)
+        const st = getState()
+        setState({ ...st, dirty: { ...st.dirty, foods: Object.keys(st.foods), menus: Object.keys(st.menus) } })
+      }
+    } catch {
+      /* ignore */
+    }
+    return missingMigration ? 'Synchronisé, sauf végé/vegan et batch : lance supabase/migrations/002_vege_batch.sql' : 'Synchronisé'
   } finally {
     running = false
   }
