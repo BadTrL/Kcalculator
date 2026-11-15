@@ -4,6 +4,7 @@ import { Foods } from './components/Foods'
 import { Menus } from './components/Menus'
 import { ProfileView } from './components/ProfileView'
 import { Settings } from './components/Settings'
+import { Coach } from './components/Coach'
 import { useStore } from './lib/store'
 import { supabase, sync } from './lib/sync'
 import { TabIcon } from './components/Icons'
@@ -12,6 +13,7 @@ const TABS = [
   { id: 'today', label: 'Journal', short: 'Journal' },
   { id: 'menus', label: 'Mes menus', short: 'Menus' },
   { id: 'foods', label: 'Aliments', short: 'Aliments' },
+  { id: 'coach', label: 'Coach', short: 'Coach' },
   { id: 'profile', label: 'Profil', short: 'Profil' },
   { id: 'settings', label: 'Réglages', short: 'Réglages' },
 ] as const
@@ -69,6 +71,7 @@ export default function App() {
         {tab === 'today' && <Today />}
         {tab === 'menus' && <Menus />}
         {tab === 'foods' && <Foods />}
+        {tab === 'coach' && <Coach />}
         {tab === 'profile' && <ProfileView key={profileStamp} />}
         {tab === 'settings' && <Settings status={status} onSync={runSync} />}
       </main>

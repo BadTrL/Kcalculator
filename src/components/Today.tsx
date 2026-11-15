@@ -9,6 +9,7 @@ import { Calendar } from './Calendar'
 import { TabIcon } from './Icons'
 import { dailyTotals, level, weekOf } from '../lib/history'
 import { CheatToggle, ProgressCard, ProgressSheet } from './Progress'
+import { PhotoMeal } from './PhotoMeal'
 
 const r = (x: number) => Math.round(x)
 const qtyUnit = (f: Food) => (f.unit === 'u' ? 'u' : f.unit)
@@ -151,6 +152,7 @@ export function Today() {
   const [calendar, setCalendar] = useState(false)
   const [progress, setProgress] = useState(false)
   const cheats = useStore((s) => s.profile.cheatMeals)
+  const [photo, setPhoto] = useState<Meal | null>(null)
   const entries = useStore((s) => s.entries)
   const foods = useStore((s) => s.foods)
   const profile = useStore((s) => s.profile)
@@ -215,6 +217,7 @@ export function Today() {
             <div className="meal-actions">
               <button className="chip pri" onClick={() => setAdding({ meal })}>+ Aliment</button>
               <button className="chip" onClick={() => setChoosing(meal)}>+ Menu</button>
+              <button className="chip" onClick={() => setPhoto(meal)}><TabIcon id="camera" size={16} /> Photo</button>
               {rows.length > 0 && (
                 <button
                   className="ghost add-line save-menu"
@@ -239,6 +242,16 @@ export function Today() {
         />
       )}
       {progress && <ProgressSheet date={date} onClose={() => setProgress(false)} />}
+      {photo && (
+        <PhotoMeal
+          date={date}
+          meal={photo}
+          onClose={(m) => {
+            setPhoto(null)
+            if (m) setMsg(m)
+          }}
+        />
+      )}
       {calendar && <Calendar date={date} onPick={setDate} onClose={() => setCalendar(false)} />}
       {adding && <AddEntry meal={adding.meal} entry={adding.entry} date={date} onClose={() => setAdding(null)} />}
     </section>

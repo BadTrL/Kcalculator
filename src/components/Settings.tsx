@@ -136,6 +136,15 @@ export function Settings({ status, onSync }: { status: string; onSync: () => voi
       </div>
 
       <div className="card">
+        <h3>Intelligence artificielle</h3>
+        <p className="muted small">
+          La photo de plat (bouton « Photo » dans le Journal) et le Coach passent par la fonction « ai » de ton projet Supabase, qui garde ta clé API en secret.
+          Il faut être connecté ci-dessus. Mise en place : README, section « IA ».
+        </p>
+        {!supabase() && <p className="note warn small">Configure d'abord la synchronisation Supabase.</p>}
+      </div>
+
+      <div className="card">
         <h3>Sauvegarde</h3>
         <p className="muted small">Exporte toutes tes données dans un fichier, ou restaure une sauvegarde.</p>
         <div className="row">
