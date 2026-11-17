@@ -63,19 +63,27 @@ Ensuite, va dans **Réglages**, crée ton compte, puis connecte-toi avec le mêm
 
 ### 4. IA : photo de plat et coach (facultatif)
 
-L'IA passe par une **fonction Supabase** (`supabase/functions/ai`) qui garde ta clé API Anthropic en secret : la clé n'est jamais dans l'appli ni sur GitHub, et seuls les comptes connectés peuvent s'en servir.
+L'IA passe par une **fonction Supabase** (`supabase/functions/ai`) qui appelle l'API Claude : ta clé API Anthropic n'est jamais dans l'appli ni sur GitHub, et seuls les comptes connectés peuvent s'en servir.
 
 1. Crée une clé API sur [console.anthropic.com](https://console.anthropic.com) (Settings → API keys) et ajoute un peu de crédit.
-2. Installe la CLI Supabase (`npm i -g supabase`), puis dans le dossier du projet :
+2. Dans Supabase > SQL Editor, lance `supabase/migrations/004_cle_ia.sql` (déjà inclus dans `schema.sql` pour un nouveau projet).
+3. Déploie la fonction une fois. Installe la CLI Supabase (`npm i -g supabase`), puis dans le dossier du projet :
    ```
    supabase login
    supabase link --project-ref <ref-de-ton-projet>
-   supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
-   supabase secrets set AI_ALLOWED_EMAILS=ton@email.fr
    supabase functions deploy ai
    ```
-   `<ref-de-ton-projet>` est la partie `xxxx` de `https://xxxx.supabase.co`. `AI_ALLOWED_EMAILS` réserve l'IA à ton compte (conseillé si quelqu'un d'autre peut créer un compte sur ton appli).
-3. Dans l'appli, sois connecté dans Réglages, puis utilise « 📷 Photo » ou l'onglet Coach.
+   `<ref-de-ton-projet>` est la partie `xxxx` de `https://xxxx.supabase.co`.
+4. Dans l'appli, connecte-toi dans Réglages, colle ta clé dans **Intelligence artificielle** et enregistre. Utilise ensuite « 📷 Photo » ou l'onglet Coach.
+
+La clé est traitée comme un mot de passe : champ masqué, chiffrée par Supabase Vault, propre à ton compte. L'appli peut la remplacer ou la supprimer mais ne peut plus la relire (elle affiche seulement ses 4 derniers caractères) ; seule la fonction « ai » la déchiffre.
+
+Variante sans saisie dans l'appli : une clé partagée en secret Supabase, utilisée pour les comptes qui n'ont pas enregistré la leur.
+```
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+supabase secrets set AI_ALLOWED_EMAILS=ton@email.fr
+```
+`AI_ALLOWED_EMAILS` réserve cette clé partagée à ces e-mails (conseillé si quelqu'un d'autre peut créer un compte sur ton appli).
 
 Modèle utilisé : Claude Opus 5.5 (`claude-opus-5-5`), avec repli automatique sur un autre modèle si la demande est déclinée. Pour en changer : `supabase secrets set AI_MODEL=claude-sonnet-5-5` (moins cher), sans redéployer l'appli. Ordre de grandeur : quelques centimes par photo, moins pour une question au coach.
 

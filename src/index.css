@@ -306,3 +306,13 @@ label.check input { width: auto; }
 .bubble { max-width: 88%; padding: 10px 14px; border-radius: 18px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .bubble.user { align-self: flex-end; background: var(--accent); color: var(--on-accent); border-bottom-right-radius: 6px; }
 .bubble.assistant { align-self: flex-start; background: var(--bg); border: 0; border-bottom-left-radius: 6px; }
+
+/* Repas numérotés : heure facultative à côté du titre */
+.meal-time { display: inline-flex; align-items: center; gap: 2px; }
+.meal-time input[type='time'] {
+  width: auto; min-height: 32px; padding: 2px 8px; font-size: 0.85rem; color: var(--muted);
+  background: none; border: 1px dashed var(--line); border-radius: 999px;
+}
+.meal-time.set input[type='time'] { color: var(--text); border-style: solid; font-weight: 600; }
+.meal-time button { min-height: 32px; padding: 0 6px; color: var(--muted); }
+.add-meal { display: block; width: 100%; margin: 4px 0 12px; color: var(--accent-text); font-weight: 600; }

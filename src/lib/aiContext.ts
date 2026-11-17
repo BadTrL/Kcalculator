@@ -1,14 +1,15 @@
+import { mealKey } from './meals'
 import { macrosFor, sum, targets } from './calc'
 import { average, dailyTotals } from './history'
 import { addDays } from './store'
-import { MEALS, type Entry, type Food, type Macros, type Profile } from './types'
+import { mealLabel, type Entry, type MealInfo, type Food, type Macros, type Profile } from './types'
 
 /**
  * Résumés texte des données envoyés à l'IA : juste ce qu'il faut pour un avis
  * personnalisé (objectifs, journal récent), sans identifiant ni compte.
  */
 
-type Data = { entries: Record<string, Entry>; foods: Record<string, Food>; profile: Profile }
+type Data = { entries: Record<string, Entry>; foods: Record<string, Food>; profile: Profile; meals?: Record<string, MealInfo> }
 
 const r = (x: number) => Math.round(x)
 const line = (m: Macros) => `${r(m.kcal)} kcal, P ${r(m.protein)} g, G ${r(m.carbs)} g, L ${r(m.fat)} g`
@@ -41,12 +42,14 @@ export function coachContext(d: Data, today: string): string {
   const rows = dayEntries(d, today)
   out.push("Aujourd'hui :")
   if (!rows.length) out.push('- rien noté pour le moment')
-  for (const meal of MEALS) {
+  for (const meal of Array.from(new Set(rows.map((e) => e.meal))).sort((a, b) => a - b)) {
     const list = rows.filter((e) => e.meal === meal)
     if (!list.length) continue
     const items = list.map((e) => `${d.foods[e.food_id].name} ${e.qty}${d.foods[e.food_id].unit === 'u' ? ' u' : ' ' + d.foods[e.food_id].unit}`)
     const tot = sum(list.map((e) => macrosFor(d.foods[e.food_id], e.qty)))
-    out.push(`- ${meal} : ${items.join(', ')} (${line(tot)})`)
+    const time = d.meals?.[mealKey(today, meal)]
+    const at = time && !time.deleted && time.time ? ` (${time.time})` : ''
+    out.push(`- ${mealLabel(meal)}${at} : ${items.join(', ')} (${line(tot)})`)
   }
 
   const totals = dailyTotals(d.entries, d.foods)

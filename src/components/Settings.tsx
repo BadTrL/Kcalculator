@@ -1,14 +1,134 @@
 import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { getConf, setConf, supabase, sync } from '../lib/sync'
-import { getState, setState, useStore, type State } from '../lib/store'
+import { getState, normalizeEntries, normalizeProfile, setState, useStore, type State } from '../lib/store'
 import { getTheme, setTheme, type Theme } from '../lib/theme'
+import { deleteAiKey, getAiKeyStatus, saveAiKey, type AiKeyStatus } from '../lib/ai'
 
 const THEMES: { id: Theme; label: string }[] = [
   { id: 'auto', label: 'Auto' },
   { id: 'light', label: 'Clair' },
   { id: 'dark', label: 'Sombre' },
 ]
+
+/**
+ * Clé API Anthropic, gérée comme un mot de passe : champ masqué, écriture seule.
+ * L'appli ne relit jamais la clé, seulement ses 4 derniers caractères.
+ */
+function AiKeyForm({ userId }: { userId: string }) {
+  const [status, setStatus] = useState<AiKeyStatus | null | 'missing' | 'loading'>('loading')
+  const [editing, setEditing] = useState(false)
+  const [key, setKey] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [msg, setMsg] = useState<{ text: string; warn?: boolean } | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    setStatus('loading')
+    getAiKeyStatus()
+      .then((s) => alive && setStatus(s))
+      .catch((e) => {
+        if (!alive) return
+        setStatus(null)
+        setMsg({ text: String(e.message ?? e), warn: true })
+      })
+    return () => {
+      alive = false
+    }
+  }, [userId])
+
+  async function save() {
+    setBusy(true)
+    setMsg(null)
+    try {
+      const hint = await saveAiKey(key)
+      setStatus({ hint, updatedAt: new Date().toISOString() })
+      setEditing(false)
+      setMsg({ text: 'Clé enregistrée.' })
+    } catch (e) {
+      setMsg({ text: String((e as Error).message ?? e), warn: true })
+    } finally {
+      // La clé ne reste pas en mémoire dans le formulaire, même en cas d'erreur.
+      setKey('')
+      setBusy(false)
+    }
+  }
+
+  async function remove() {
+    if (!confirm('Supprimer ta clé API ? L’IA utilisera la clé partagée du projet s’il y en a une.')) return
+    setBusy(true)
+    setMsg(null)
+    try {
+      await deleteAiKey()
+      setStatus(null)
+      setMsg({ text: 'Clé supprimée.' })
+    } catch (e) {
+      setMsg({ text: String((e as Error).message ?? e), warn: true })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (status === 'loading') return <p className="muted small">Chargement…</p>
+  if (status === 'missing')
+    return (
+      <p className="note warn small">
+        Pour enregistrer ta clé ici, lance d'abord la migration <code>supabase/migrations/004_cle_ia.sql</code> dans Supabase (SQL Editor).
+      </p>
+    )
+
+  const showForm = editing || !status
+  return (
+    <>
+      {status && !editing && (
+        <>
+          <p>
+            Clé API enregistrée : <strong>••••{status.hint}</strong>
+          </p>
+          <p className="muted small">Ajoutée le {new Date(status.updatedAt).toLocaleDateString('fr-FR')}. Elle est chiffrée sur ton serveur et ne s'affiche plus jamais en entier.</p>
+          <div className="row end">
+            <button type="button" className="ghost" disabled={busy} onClick={remove}>Supprimer</button>
+            <button type="button" className="secondary" disabled={busy} onClick={() => { setEditing(true); setMsg(null) }}>Remplacer</button>
+          </div>
+        </>
+      )}
+      {showForm && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (key.trim()) save()
+          }}
+        >
+          <p className="muted small">
+            Colle ta clé API Anthropic (console.anthropic.com → API keys). Elle est envoyée une seule fois, chiffrée sur ton serveur Supabase, et seule la fonction « ai » peut la lire.
+            {!status && ' Sans clé ici, l’IA utilise la clé partagée du projet s’il y en a une.'}
+          </p>
+          <label>
+            Clé API
+            <input
+              type="password"
+              name="anthropic-api-key"
+              autoComplete="off"
+              autoCapitalize="off"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder="sk-ant-…"
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+            />
+          </label>
+          <div className="row end">
+            {editing && (
+              <button type="button" className="ghost" disabled={busy} onClick={() => { setEditing(false); setKey(''); setMsg(null) }}>Annuler</button>
+            )}
+            <button type="submit" disabled={busy || !key.trim()}>{busy ? 'Enregistrement…' : 'Enregistrer la clé'}</button>
+          </div>
+        </form>
+      )}
+      {msg && <p className={msg.warn ? 'note warn small' : 'note small'}>{msg.text}</p>}
+    </>
+  )
+}
 
 export function Settings({ status, onSync }: { status: string; onSync: () => void }) {
   const envConf = !!import.meta.env.VITE_SUPABASE_URL
@@ -17,7 +137,7 @@ export function Settings({ status, onSync }: { status: string; onSync: () => voi
   const [email, setEmail] = useState('')
   const [pwd, setPwd] = useState('')
   const [msg, setMsg] = useState<string | null>(null)
-  const pending = useStore((s) => s.dirty.foods.length + s.dirty.entries.length + (s.dirty.profile ? 1 : 0))
+  const pending = useStore((s) => s.dirty.foods.length + s.dirty.entries.length + s.dirty.menus.length + s.dirty.meals.length + (s.dirty.profile ? 1 : 0))
   const lastSync = useStore((s) => s.lastSync)
   const [theme, setT] = useState<Theme>(getTheme)
 
@@ -54,7 +174,19 @@ export function Settings({ status, onSync }: { status: string; onSync: () => voi
         if (!s.foods || !s.entries || !s.profile) throw new Error()
         if (!confirm('Remplacer les données de cet appareil par cette sauvegarde ?')) return
         const menus = s.menus ?? {}
-        setState({ ...s, menus, dirty: { foods: Object.keys(s.foods), entries: Object.keys(s.entries), menus: Object.keys(menus), profile: true }, lastSync: null })
+        const meals = s.meals ?? {}
+        // Les sauvegardes d'avant les repas numérotés ont meal = 'Matin', 'Midi'… : on convertit.
+        const entries = normalizeEntries(s.entries)
+        const profile = normalizeProfile(s.profile)
+        setState({
+          ...s,
+          entries,
+          profile,
+          menus,
+          meals,
+          dirty: { foods: Object.keys(s.foods), entries: Object.keys(entries), menus: Object.keys(menus), meals: Object.keys(meals), profile: true },
+          lastSync: null,
+        })
         setMsg('Sauvegarde importée.')
       } catch {
         setMsg('Fichier invalide.')
@@ -138,10 +270,11 @@ export function Settings({ status, onSync }: { status: string; onSync: () => voi
       <div className="card">
         <h3>Intelligence artificielle</h3>
         <p className="muted small">
-          La photo de plat (bouton « Photo » dans le Journal) et le Coach passent par la fonction « ai » de ton projet Supabase, qui garde ta clé API en secret.
+          La photo de plat (bouton « Photo » dans le Journal) et le Coach passent par la fonction « ai » de ton projet Supabase.
           Il faut être connecté ci-dessus. Mise en place : README, section « IA ».
         </p>
         {!supabase() && <p className="note warn small">Configure d'abord la synchronisation Supabase.</p>}
+        {supabase() && user && <AiKeyForm userId={user.id} />}
       </div>
 
       <div className="card">

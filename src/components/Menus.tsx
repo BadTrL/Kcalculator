@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { dietMatches, macrosFor, menuDiet, portionQty, portionsOf, scaleMacros, sum } from '../lib/calc'
 import { iso } from '../lib/date'
-import { activeMenus, addDays, addItemsToDay, deleteMenu, newId, saveMenu, useStore } from '../lib/store'
-import { MEALS, type Diet, type Food, type Macros, type Meal, type Menu, type MenuItem } from '../lib/types'
+import { activeMenus, addDays, addItemsToDay, dayMeals, deleteMenu, newId, saveMenu, useStore } from '../lib/store'
+import { mealLabel, type Diet, type Food, type Macros, type Meal, type Menu, type MenuItem } from '../lib/types'
+import { guessMeal } from '../lib/meals'
 import { DietBadge, DietFilter } from './Diet'
 import { FoodPicker } from './FoodPicker'
 
@@ -141,10 +142,9 @@ function AddToJournal({ menu, onClose }: { menu: Menu; onClose: (msg?: string) =
   const [date, setDate] = useState(() => iso(new Date()))
   const [spread, setSpread] = useState(false)
   const days = portions > 1 && spread ? portions : 1
-  const [meal, setMeal] = useState<Meal>(() => {
-    const h = new Date().getHours()
-    return h < 11 ? 'Matin' : h < 15 ? 'Midi' : h < 18 ? 'Collation' : 'Soir'
-  })
+  const meals = useStore((s) => dayMeals(s, date))
+  const perDay = useStore((s) => s.profile.mealsPerDay)
+  const [meal, setMeal] = useState<Meal>(() => guessMeal(perDay ?? 4))
   return (
     <div className="modal" role="dialog" aria-label="Ajouter au journal">
       <form
@@ -154,10 +154,10 @@ function AddToJournal({ menu, onClose }: { menu: Menu; onClose: (msg?: string) =
           addItemsToDay(menu.items, date, meal, portions, days)
           onClose(
             days > 1
-              ? `Une portion de « ${menu.name} » ajoutée au repas ${meal}, du ${fmtDate(date)} au ${fmtDate(addDays(date, days - 1))}.`
+              ? `Une portion de « ${menu.name} » ajoutée au ${mealLabel(meal).toLowerCase()}, du ${fmtDate(date)} au ${fmtDate(addDays(date, days - 1))}.`
               : portions > 1
-                ? `Une portion de « ${menu.name} » (1/${portions}) ajoutée au repas ${meal}.`
-                : `« ${menu.name} » ajouté au repas ${meal}.`,
+                ? `Une portion de « ${menu.name} » (1/${portions}) ajoutée au ${mealLabel(meal).toLowerCase()}.`
+                : `« ${menu.name} » ajouté au ${mealLabel(meal).toLowerCase()}.`,
           )
         }}
       >
@@ -173,8 +173,10 @@ function AddToJournal({ menu, onClose }: { menu: Menu; onClose: (msg?: string) =
           </label>
         )}
         <div className="seg">
-          {MEALS.map((m) => (
-            <button type="button" key={m} className={meal === m ? 'on' : ''} onClick={() => setMeal(m)}>{m}</button>
+          {[...meals, meals.length + 1].map((m) => (
+            <button type="button" key={m} className={meal === m ? 'on' : ''} onClick={() => setMeal(m)}>
+              {m > meals.length ? '+ ' : ''}{mealLabel(m)}
+            </button>
           ))}
         </div>
         <div className="row end"><button type="submit">Ajouter au journal</button></div>

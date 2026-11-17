@@ -1,3 +1,4 @@
+import { mealKey } from './meals'
 import type { Goal, Macros, Meal } from './types'
 
 /**
@@ -26,7 +27,7 @@ export function mondayOf(date: string) {
 
 // ---------- Cheat meals ----------
 
-export const cheatKey = (date: string, meal: Meal) => `${date}|${meal}`
+export const cheatKey = (date: string, meal: Meal) => mealKey(date, meal)
 
 /** Jours qui ont au moins un cheat meal. */
 export function cheatDays(cheats: string[] | undefined): Set<string> {

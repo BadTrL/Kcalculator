@@ -2,8 +2,8 @@ import { useMemo, useState } from 'react'
 import { analyzePhoto, per100, prepareImage, rescale, type Analysis, type AnalyzedItem } from '../lib/ai'
 import { photoContext } from '../lib/aiContext'
 import { sum } from '../lib/calc'
-import { getState, newId, saveEntry, saveFood } from '../lib/store'
-import { MEALS, type Meal } from '../lib/types'
+import { dayMeals, getState, newId, saveEntry, saveFood, useStore } from '../lib/store'
+import { mealLabel, type Meal } from '../lib/types'
 import { TabIcon } from './Icons'
 
 const r = (x: number) => Math.round(x)
@@ -21,6 +21,8 @@ type Image = Awaited<ReturnType<typeof prepareImage>>
  */
 export function PhotoMeal({ date, meal: initialMeal, onClose }: { date: string; meal: Meal; onClose: (msg?: string) => void }) {
   const [meal, setMeal] = useState<Meal>(initialMeal)
+  const dayList = useStore((s) => dayMeals(s, date))
+  const meals = dayList.includes(initialMeal) ? dayList : [...dayList, initialMeal].sort((a, b) => a - b)
   const [image, setImage] = useState<Image | null>(null)
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
@@ -64,7 +66,7 @@ export function PhotoMeal({ date, meal: initialMeal, onClose }: { date: string; 
       const food = saveFood({ id: newId(), name: it.name.trim(), unit: 'g', ...per100(it), brand: PHOTO_BRAND, barcode: null, diet: null })
       saveEntry({ id: newId(), date, meal, food_id: food.id, qty: Math.round(it.grams) })
     }
-    onClose(`${result?.dish ?? 'Plat'} ajouté à ${meal} (${r(sum(valid).kcal)} kcal, estimation).`)
+    onClose(`${result?.dish ?? 'Plat'} ajouté au ${mealLabel(meal).toLowerCase()} (${r(sum(valid).kcal)} kcal, estimation).`)
   }
 
   return (
@@ -87,9 +89,9 @@ export function PhotoMeal({ date, meal: initialMeal, onClose }: { date: string; 
             </label>
             <label>
               Repas
-              <select value={meal} onChange={(e) => setMeal(e.target.value as Meal)}>
-                {MEALS.map((m) => (
-                  <option key={m}>{m}</option>
+              <select value={meal} onChange={(e) => setMeal(Number(e.target.value))}>
+                {meals.map((m) => (
+                  <option key={m} value={m}>{mealLabel(m)}</option>
                 ))}
               </select>
             </label>
@@ -136,7 +138,7 @@ export function PhotoMeal({ date, meal: initialMeal, onClose }: { date: string; 
             )}
             <div className="row end">
               <button className="ghost" onClick={() => setResult(null)}>Autre photo</button>
-              <button onClick={save} disabled={!items.some((it) => it.name.trim() && it.grams > 0)}>Ajouter à {meal}</button>
+              <button onClick={save} disabled={!items.some((it) => it.name.trim() && it.grams > 0)}>Ajouter au {mealLabel(meal).toLowerCase()}</button>
             </div>
           </>
         )}
