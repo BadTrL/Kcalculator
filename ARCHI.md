@@ -103,3 +103,16 @@ Si l'appli est mise à jour avant que la migration soit lancée, la synchro cont
 ## Open Food Facts
 
 Pour le scan de code-barres, l'appli interroge directement **Open Food Facts**, une base de données publique et gratuite de produits alimentaires. Elle récupère le nom, la marque, les valeurs nutritionnelles et, quand le produit l'indique, s'il est végétarien ou vegan. Tu vérifies et tu enregistres : l'aliment rejoint alors ta propre base.
+
+## IA : photo de plat et coach
+
+```
+ Appli ──(photo réduite + résumé du jour, avec ton jeton de connexion)──► Fonction Supabase « ai » ──(clé API secrète)──► API Claude
+       ◄────────────(aliments estimés + avis, ou réponse du coach)────────┘
+```
+
+La clé API ne peut pas être dans l'appli : tout ce qui est dans l'appli est lisible par n'importe qui depuis le navigateur. Elle est donc rangée comme **secret** dans Supabase, et seule la fonction `supabase/functions/ai` la lit. La fonction vérifie que la demande vient d'un compte connecté (et, si `AI_ALLOWED_EMAILS` est défini, d'un e-mail autorisé) avant d'appeler l'IA.
+
+Ce qui est envoyé à l'IA : la photo (réduite à 1280 px), ta précision éventuelle, et un résumé texte (objectif, poids, masse grasse, cibles, journal des 14 derniers jours pour le coach). Aucun identifiant de compte. Rien n'est enregistré dans Supabase par la fonction ; la conversation du coach reste sur l'appareil.
+
+Pour la photo, la fonction demande une réponse au format JSON imposé (plat, aliments avec poids, kcal et macros, confiance, avis). L'appli convertit chaque aliment en valeurs pour 100 g, ce qui permet de corriger le poids et de garder les bons ratios.

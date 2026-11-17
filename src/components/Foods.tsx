@@ -6,6 +6,7 @@ import type { Diet, Food } from '../lib/types'
 import { DietBadge, DietFilter } from './Diet'
 import { FoodForm, type FoodDraft } from './FoodForm'
 import { LazyScanner as Scanner } from './LazyScanner'
+import { TabIcon } from './Icons'
 
 export const norm = (s: string) =>
   s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/œ/g, 'oe').replace(/æ/g, 'ae')
@@ -48,7 +49,7 @@ export function Foods() {
     <section>
       <div className="toolbar">
         <input type="search" placeholder={`Rechercher parmi ${list.length} aliments`} value={q} onChange={(e) => setQ(e.target.value)} />
-        <button className="secondary" onClick={() => setScan(true)} aria-label="Scanner">📷</button>
+        <button className="secondary" onClick={() => setScan(true)} aria-label="Scanner un code-barres"><TabIcon id="scan" size={20} /></button>
         <button onClick={() => setEdit({ name: q, diet })}>+ Ajouter</button>
       </div>
       <DietFilter value={diet} onChange={setDiet} />

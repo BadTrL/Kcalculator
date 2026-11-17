@@ -3,6 +3,7 @@ import { deleteFood, newId, saveFood } from '../lib/store'
 import { lookupBarcode } from '../lib/off'
 import type { Diet, Food, Unit } from '../lib/types'
 import { LazyScanner as Scanner } from './LazyScanner'
+import { TabIcon } from './Icons'
 
 export type FoodDraft = Partial<Omit<Food, 'updated_at'>>
 
@@ -93,7 +94,7 @@ export function FoodForm({ initial, onClose }: Props) {
         </div>
 
         <button type="button" className="secondary wide" onClick={() => setScan(true)}>
-          📷 Scanner le code-barres
+          <TabIcon id="scan" size={18} /> Scanner le code-barres
         </button>
         {msg && <p className="note">{msg}</p>}
 

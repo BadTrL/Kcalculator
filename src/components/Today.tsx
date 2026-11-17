@@ -6,9 +6,41 @@ import { FoodPicker } from './FoodPicker'
 import { iso } from '../lib/date'
 import { MacroLine, MenuEditor, useMenuTotals } from './Menus'
 import { Calendar } from './Calendar'
+import { TabIcon } from './Icons'
+import { dailyTotals, level, weekOf } from '../lib/history'
+import { CheatToggle, ProgressCard, ProgressSheet } from './Progress'
+import { PhotoMeal } from './PhotoMeal'
 
 const r = (x: number) => Math.round(x)
 const qtyUnit = (f: Food) => (f.unit === 'u' ? 'u' : f.unit)
+const DAYS = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+
+/** Bandeau de la semaine : un point par jour enregistré, coloré selon l'écart à l'objectif. */
+function WeekStrip({ date, today, target, onPick, onShift }: { date: string; today: string; target: number; onPick: (d: string) => void; onShift: (days: number) => void }) {
+  const entries = useStore((s) => s.entries)
+  const foods = useStore((s) => s.foods)
+  const totals = useMemo(() => dailyTotals(entries, foods), [entries, foods])
+  return (
+    <div className="week">
+      <button className="ghost week-nav" onClick={() => onShift(-7)} aria-label="Semaine précédente"><TabIcon id="chevL" size={18} /></button>
+      {weekOf(date).map((d, i) => (
+        <button
+          key={d}
+          type="button"
+          className={['day', d === date ? 'cur' : '', d === today ? 'today' : '', totals[d] ? level(totals[d].kcal, target) : ''].join(' ')}
+          onClick={() => onPick(d)}
+          aria-label={new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) + (totals[d] ? ` : ${r(totals[d].kcal)} kcal` : '')}
+          aria-pressed={d === date}
+        >
+          <span>{DAYS[i]}</span>
+          <b>{+d.slice(8)}</b>
+          <i aria-hidden />
+        </button>
+      ))}
+      <button className="ghost week-nav" onClick={() => onShift(7)} aria-label="Semaine suivante"><TabIcon id="chevR" size={18} /></button>
+    </div>
+  )
+}
 
 function Bar({ label, value, target, cls }: { label: string; value: number; target: number; cls: string }) {
   const pct = target > 0 ? value / target : 0
@@ -105,6 +137,12 @@ function MenuChooser({ meal, date, onClose }: { meal: Meal; date: string; onClos
   )
 }
 
+function shiftIso(d: string, days: number) {
+  const x = new Date(d + 'T12:00:00')
+  x.setDate(x.getDate() + days)
+  return iso(x)
+}
+
 export function Today() {
   const [date, setDate] = useState(() => iso(new Date()))
   const [adding, setAdding] = useState<{ meal: Meal; entry?: Entry } | null>(null)
@@ -112,6 +150,9 @@ export function Today() {
   const [saving, setSaving] = useState<Partial<Menu> | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [calendar, setCalendar] = useState(false)
+  const [progress, setProgress] = useState(false)
+  const cheats = useStore((s) => s.profile.cheatMeals)
+  const [photo, setPhoto] = useState<Meal | null>(null)
   const entries = useStore((s) => s.entries)
   const foods = useStore((s) => s.foods)
   const profile = useStore((s) => s.profile)
@@ -130,40 +171,35 @@ export function Today() {
   }, [entries, foods, date])
 
   const total = sum(MEALS.flatMap((m) => byMeal[m].map((x) => x.m)))
-  const shift = (d: number) => {
-    const x = new Date(date + 'T12:00:00')
-    x.setDate(x.getDate() + d)
-    setDate(iso(x))
-  }
+  const shift = (d: number) => setDate(shiftIso(date, d))
   const today = iso(new Date())
-  const label = date === today ? "Aujourd'hui" : new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+  const long = new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+  const rel = date === today ? "Aujourd'hui" : shiftIso(today, -1) === date ? 'Hier' : shiftIso(today, 1) === date ? 'Demain' : null
 
   return (
     <section>
-      <div className="datebar">
-        <button className="ghost" onClick={() => shift(-1)} aria-label="Jour précédent">‹</button>
-        <button className="ghost date" onClick={() => setCalendar(true)} aria-label="Ouvrir le calendrier">
-          <span aria-hidden>📅 </span>
-          {label}
-        </button>
-        <button className="ghost" onClick={() => shift(1)} aria-label="Jour suivant">›</button>
+      <div className="day-head">
+        <div>
+          <p className="kicker">{rel ? long : new Date(date + 'T12:00:00').getFullYear()}</p>
+          <h1>{rel ?? long}</h1>
+        </div>
+        {date !== today && <button className="chip" onClick={() => setDate(today)}>Aujourd'hui</button>}
+        <button className="icon-btn" onClick={() => setCalendar(true)} aria-label="Ouvrir le calendrier"><TabIcon id="today" size={20} /></button>
       </div>
-      {date !== today && (
-        <p className="back-today">
-          <button className="ghost small" onClick={() => setDate(today)}>Revenir à aujourd'hui</button>
-        </p>
-      )}
+      <WeekStrip date={date} today={today} target={target.kcal} onPick={setDate} onShift={shift} />
       <Summary total={total} target={target} />
+      <ProgressCard date={date} onOpen={() => setProgress(true)} />
       {MEALS.map((meal) => {
         const rows = byMeal[meal]
         const t = sum(rows.map((x) => x.m))
         return (
-          <div className="card meal" key={meal}>
+          <div className={'card meal' + (cheats?.includes(`${date}|${meal}`) ? ' cheat' : '')} key={meal}>
             <div className="meal-head">
               <h3>{meal}</h3>
               <span className="muted small">
                 {r(t.kcal)} kcal · P {r(t.protein)} · G {r(t.carbs)} · L {r(t.fat)}
               </span>
+              <CheatToggle date={date} meal={meal} />
             </div>
             <ul className="list compact">
               {rows.map(({ e, f, m }) => (
@@ -179,8 +215,9 @@ export function Today() {
               ))}
             </ul>
             <div className="meal-actions">
-              <button className="ghost add-line" onClick={() => setAdding({ meal })}>+ Aliment</button>
-              <button className="ghost add-line" onClick={() => setChoosing(meal)}>+ Menu</button>
+              <button className="chip pri" onClick={() => setAdding({ meal })}>+ Aliment</button>
+              <button className="chip" onClick={() => setChoosing(meal)}>+ Menu</button>
+              <button className="chip" onClick={() => setPhoto(meal)}><TabIcon id="camera" size={16} /> Photo</button>
               {rows.length > 0 && (
                 <button
                   className="ghost add-line save-menu"
@@ -201,6 +238,17 @@ export function Today() {
           onClose={(saved) => {
             setSaving(null)
             if (saved) setMsg(`Menu « ${saved.name} » enregistré. Retrouve-le dans l'onglet Mes menus.`)
+          }}
+        />
+      )}
+      {progress && <ProgressSheet date={date} onClose={() => setProgress(false)} />}
+      {photo && (
+        <PhotoMeal
+          date={date}
+          meal={photo}
+          onClose={(m) => {
+            setPhoto(null)
+            if (m) setMsg(m)
           }}
         />
       )}

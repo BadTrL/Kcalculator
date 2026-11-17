@@ -1,18 +1,11 @@
 import { useMemo, useState } from 'react'
 import { targets } from '../lib/calc'
 import { iso } from '../lib/date'
-import { average, dailyTotals, monthGrid } from '../lib/history'
+import { average, dailyTotals, level, monthGrid } from '../lib/history'
 import { useStore } from '../lib/store'
 import { MacroLine } from './Menus'
 
 const WEEK = ['L', 'M', 'M', 'J', 'V', 'S', 'D']
-
-/** Écart à l'objectif du jour : dans les ±10 % = ok, en dessous = low, au-dessus = high. */
-function level(kcal: number, target: number) {
-  if (target <= 0) return 'ok'
-  const x = kcal / target
-  return x < 0.9 ? 'low' : x > 1.1 ? 'high' : 'ok'
-}
 
 /** Calendrier du journal : un mois, le total de kcal de chaque jour, et la moyenne du mois. */
 export function Calendar({ date, onPick, onClose }: { date: string; onPick: (d: string) => void; onClose: () => void }) {

@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { getConf, setConf, supabase, sync } from '../lib/sync'
 import { getState, setState, useStore, type State } from '../lib/store'
+import { getTheme, setTheme, type Theme } from '../lib/theme'
+
+const THEMES: { id: Theme; label: string }[] = [
+  { id: 'auto', label: 'Auto' },
+  { id: 'light', label: 'Clair' },
+  { id: 'dark', label: 'Sombre' },
+]
 
 export function Settings({ status, onSync }: { status: string; onSync: () => void }) {
   const envConf = !!import.meta.env.VITE_SUPABASE_URL
@@ -12,6 +19,7 @@ export function Settings({ status, onSync }: { status: string; onSync: () => voi
   const [msg, setMsg] = useState<string | null>(null)
   const pending = useStore((s) => s.dirty.foods.length + s.dirty.entries.length + (s.dirty.profile ? 1 : 0))
   const lastSync = useStore((s) => s.lastSync)
+  const [theme, setT] = useState<Theme>(getTheme)
 
   useEffect(() => {
     const sb = supabase()
@@ -56,6 +64,28 @@ export function Settings({ status, onSync }: { status: string; onSync: () => voi
 
   return (
     <section>
+      <div className="card">
+        <h3>Apparence</h3>
+        <div className="seg" role="radiogroup" aria-label="Thème">
+          {THEMES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="radio"
+              aria-checked={theme === t.id}
+              className={theme === t.id ? 'on' : ''}
+              onClick={() => {
+                setTheme(t.id)
+                setT(t.id)
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <p className="muted small">« Auto » suit le réglage clair ou sombre de ton téléphone ou de ton PC. Ce choix est propre à chaque appareil.</p>
+      </div>
+
       <div className="card">
         <h3>Synchronisation entre appareils</h3>
         {!envConf && (
@@ -103,6 +133,15 @@ export function Settings({ status, onSync }: { status: string; onSync: () => voi
             </form>
           ))}
         {msg && <p className="note">{msg}</p>}
+      </div>
+
+      <div className="card">
+        <h3>Intelligence artificielle</h3>
+        <p className="muted small">
+          La photo de plat (bouton « Photo » dans le Journal) et le Coach passent par la fonction « ai » de ton projet Supabase, qui garde ta clé API en secret.
+          Il faut être connecté ci-dessus. Mise en place : README, section « IA ».
+        </p>
+        {!supabase() && <p className="note warn small">Configure d'abord la synchronisation Supabase.</p>}
       </div>
 
       <div className="card">

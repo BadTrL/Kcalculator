@@ -35,3 +35,21 @@ export function average(list: Macros[]): Macros | null {
   const n = list.length
   return { kcal: t.kcal / n, protein: t.protein / n, carbs: t.carbs / n, fat: t.fat / n }
 }
+
+/** Écart à l'objectif du jour : dans les ±10 % = ok, en dessous = low, au-dessus = high. */
+export function level(kcal: number, target: number): 'ok' | 'low' | 'high' {
+  if (target <= 0) return 'ok'
+  const x = kcal / target
+  return x < 0.9 ? 'low' : x > 1.1 ? 'high' : 'ok'
+}
+
+/** Les 7 dates (lundi → dimanche) de la semaine qui contient la date donnée. */
+export function weekOf(date: string): string[] {
+  const d = new Date(date + 'T12:00:00Z')
+  const lead = (d.getUTCDay() + 6) % 7
+  return Array.from({ length: 7 }, (_, i) => {
+    const x = new Date(d)
+    x.setUTCDate(d.getUTCDate() - lead + i)
+    return x.toISOString().slice(0, 10)
+  })
+}

@@ -43,6 +43,8 @@ export interface Profile {
   proteinCoef: number // g / kg de masse maigre
   fatCoef: number // g / kg de masse maigre
   goal: Goal
+  /** Cheat meals marqués dans le journal, clés « AAAA-MM-JJ|Repas ». Synchronisé avec le profil. */
+  cheatMeals?: string[]
   updated_at: string
 }
 

@@ -12,6 +12,8 @@ Fonctionne sur téléphone et sur PC (appli web installable), hors ligne, avec s
 - **Batch cooking** : dans un menu, indique pour combien de repas tu cuisines. Tu saisis les quantités totales, l'appli affiche la portion par repas (quantités divisées par le nombre de repas) avec ses kcal et macros. « + Journal » ajoute une portion au repas choisi, et peut aussi la répéter les jours suivants.
 - **Calendrier** : dans le Journal, touche la date pour ouvrir le calendrier. Chaque jour affiche ses kcal (en couleur selon l'objectif), avec la moyenne du mois. Touche un jour pour revoir ce que tu as mangé.
 - **Scan de code-barres** avec la caméra : l'appli récupère les valeurs sur Open Food Facts, tu vérifies et tu enregistres.
+- **Plat en photo (IA)** : dans le Journal, « 📷 Photo » sur un repas. Prends ton assiette en photo (ou une carte de restaurant), ajoute une précision si tu veux. L'IA décompose le plat en aliments avec leur poids estimé, leurs kcal et macros, et donne un avis par rapport à ton objectif du jour. C'est une estimation : tu corriges les poids (les macros suivent) ou tu retires un élément avant « Ajouter ». Chaque élément devient un aliment marqué « Estimation photo ».
+- **Coach (IA)** : discussion avec un coach qui voit ton objectif, ta journée et tes 14 derniers jours. Questions toutes prêtes (semaine, dîner avec ce qu'il reste, cheat meal, protéines) ou question libre. La conversation reste sur l'appareil.
 - **Profil** : même calcul que ton fichier Excel. Katch-McArdle (370 + 21,6 × masse maigre) × activité, objectif sèche / maintien / prise de masse arrondi à 50 kcal, protéines et lipides en g/kg de masse maigre, glucides sur le reste.
 - **Réglages** : connexion pour la synchro, export / import d'une sauvegarde.
 
@@ -59,6 +61,24 @@ Tu peux aussi sauter l'étape 3 et saisir l'URL et la clé dans **Réglages**, s
 
 Ensuite, va dans **Réglages**, crée ton compte, puis connecte-toi avec le même compte sur chaque appareil.
 
+### 4. IA : photo de plat et coach (facultatif)
+
+L'IA passe par une **fonction Supabase** (`supabase/functions/ai`) qui garde ta clé API Anthropic en secret : la clé n'est jamais dans l'appli ni sur GitHub, et seuls les comptes connectés peuvent s'en servir.
+
+1. Crée une clé API sur [console.anthropic.com](https://console.anthropic.com) (Settings → API keys) et ajoute un peu de crédit.
+2. Installe la CLI Supabase (`npm i -g supabase`), puis dans le dossier du projet :
+   ```
+   supabase login
+   supabase link --project-ref <ref-de-ton-projet>
+   supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+   supabase secrets set AI_ALLOWED_EMAILS=ton@email.fr
+   supabase functions deploy ai
+   ```
+   `<ref-de-ton-projet>` est la partie `xxxx` de `https://xxxx.supabase.co`. `AI_ALLOWED_EMAILS` réserve l'IA à ton compte (conseillé si quelqu'un d'autre peut créer un compte sur ton appli).
+3. Dans l'appli, sois connecté dans Réglages, puis utilise « 📷 Photo » ou l'onglet Coach.
+
+Modèle utilisé : Claude Opus 5.5 (`claude-opus-5-5`), avec repli automatique sur un autre modèle si la demande est déclinée. Pour en changer : `supabase secrets set AI_MODEL=claude-sonnet-5-5` (moins cher), sans redéployer l'appli. Ordre de grandeur : quelques centimes par photo, moins pour une question au coach.
+
 ## Synchro : comment ça marche
 
 Tout est d'abord enregistré sur l'appareil, donc l'appli fonctionne sans réseau. Dès qu'il y a une connexion, l'appli envoie tes changements et récupère ceux des autres appareils : au démarrage, quand tu reviens sur l'appli, et 3 s après chaque modification. Si le même élément a été modifié sur deux appareils, c'est la modification la plus récente qui est gardée. Une suppression est gardée comme un marqueur, pour qu'elle se propage aux autres appareils.
@@ -70,8 +90,11 @@ src/lib/calc.ts        calculs (métabolisme, objectifs, macros)
 src/lib/store.ts       données locales
 src/lib/sync.ts        synchro Supabase
 src/lib/off.ts         recherche Open Food Facts
+src/lib/ai.ts          appels à l'IA (photo, coach) via la fonction Supabase
+src/lib/aiContext.ts   résumé des données envoyé à l'IA (objectif, journal récent)
 src/components/        écrans (Journal, Mes menus, Aliments, Profil, Réglages, scanner)
 src/data/seedFoods.json  aliments importés de l'Excel
 supabase/schema.sql    tables et règles d'accès (nouveau projet)
 supabase/migrations/   changements de tables pour un projet existant
+supabase/functions/ai/ fonction Edge qui appelle l'API Claude avec ta clé (secret)
 ```
