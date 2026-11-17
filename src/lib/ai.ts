@@ -42,9 +42,52 @@ async function callAi<T>(body: Record<string, unknown>): Promise<T> {
       /* corps non JSON */
     }
     if (!msg && ctx?.status === 404) msg = "La fonction IA n'est pas déployée (voir README, section IA)."
+    // Fonction absente ou en panne : la réponse n'a pas les en-têtes CORS, le navigateur la bloque
+    // et supabase-js ne voit qu'un échec réseau (FunctionsFetchError).
+    if (!msg && (error as Error).name === 'FunctionsFetchError') {
+      msg = navigator.onLine
+        ? "Impossible de joindre la fonction IA : elle n'est sans doute pas déployée (« supabase functions deploy ai », voir README) ou elle plante au démarrage (Supabase > Edge Functions > ai > Logs)."
+        : "Pas de connexion internet : l'IA a besoin du réseau."
+    }
     throw new Error(msg || error.message)
   }
   return data as T
+}
+
+/**
+ * Clé API Anthropic du compte (migration 004). L'appli peut l'écrire ou la supprimer,
+ * mais ne peut relire que ses 4 derniers caractères : seule la fonction « ai » la déchiffre.
+ */
+export interface AiKeyStatus {
+  hint: string
+  updatedAt: string
+}
+
+/** null = pas de clé ; 'missing' = migration 004 pas encore lancée. */
+export async function getAiKeyStatus(): Promise<AiKeyStatus | null | 'missing'> {
+  const sb = supabase()
+  if (!sb) return null
+  const { data, error } = await sb.from('ai_keys').select('hint, updated_at').maybeSingle()
+  if (error) {
+    if (error.code === '42P01' || error.code === 'PGRST205' || /ai_keys/.test(error.message)) return 'missing'
+    throw new Error(error.message)
+  }
+  return data ? { hint: data.hint as string, updatedAt: data.updated_at as string } : null
+}
+
+export async function saveAiKey(key: string): Promise<string> {
+  const sb = supabase()
+  if (!sb) throw new Error('Configure Supabase dans Réglages.')
+  const { data, error } = await sb.rpc('set_ai_key', { p_key: key.trim() })
+  if (error) throw new Error(error.message)
+  return data as string
+}
+
+export async function deleteAiKey(): Promise<void> {
+  const sb = supabase()
+  if (!sb) return
+  const { error } = await sb.rpc('delete_ai_key')
+  if (error) throw new Error(error.message)
 }
 
 /** Réduit la photo (1280 px max, JPEG) : envoi plus rapide et moins cher, précision suffisante. */

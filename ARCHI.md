@@ -80,7 +80,8 @@ Les tables de Kcalculator :
 | Table | Contenu |
 |---|---|
 | `foods` | Tes aliments : nom, valeurs pour 100 g / 100 ml / 1 unité, code-barres, régime (végé / vegan) |
-| `entries` | Ton journal : quel aliment, quelle quantité, quel jour, quel repas |
+| `entries` | Ton journal : quel aliment, quelle quantité, quel jour, quel repas (Repas 1, Repas 2…) |
+| `meals` | L'heure (facultative) de chaque repas d'une journée |
 | `menus` | Tes menus enregistrés, avec le nombre de repas pour le batch cooking |
 | `profiles` | Ton profil (poids, % de graisse, activité, objectif) |
 
@@ -111,7 +112,9 @@ Pour le scan de code-barres, l'appli interroge directement **Open Food Facts**, 
        ◄────────────(aliments estimés + avis, ou réponse du coach)────────┘
 ```
 
-La clé API ne peut pas être dans l'appli : tout ce qui est dans l'appli est lisible par n'importe qui depuis le navigateur. Elle est donc rangée comme **secret** dans Supabase, et seule la fonction `supabase/functions/ai` la lit. La fonction vérifie que la demande vient d'un compte connecté (et, si `AI_ALLOWED_EMAILS` est défini, d'un e-mail autorisé) avant d'appeler l'IA.
+La clé API ne peut pas être dans l'appli : tout ce qui est dans l'appli est lisible par n'importe qui depuis le navigateur. Tu la colles une fois dans Réglages ; elle part directement dans **Supabase Vault**, qui la chiffre (table `ai_keys` + fonctions `set_ai_key` / `delete_ai_key`, migration 004). Comme un mot de passe, elle est en écriture seule : ton compte peut la remplacer ou la supprimer, et ne relit que ses 4 derniers caractères. Seule la fonction `supabase/functions/ai`, avec le rôle `service_role`, peut la déchiffrer (`get_ai_key`).
+
+S'il n'y a pas de clé pour ton compte, la fonction se replie sur le **secret** global `ANTHROPIC_API_KEY`, réservé aux e-mails de `AI_ALLOWED_EMAILS` s'il est défini. Dans tous les cas, la fonction vérifie d'abord que la demande vient d'un compte connecté.
 
 Ce qui est envoyé à l'IA : la photo (réduite à 1280 px), ta précision éventuelle, et un résumé texte (objectif, poids, masse grasse, cibles, journal des 14 derniers jours pour le coach). Aucun identifiant de compte. Rien n'est enregistré dans Supabase par la fonction ; la conversation du coach reste sur l'appareil.
 

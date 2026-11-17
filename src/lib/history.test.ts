@@ -3,7 +3,7 @@ import { average, dailyTotals, level, monthGrid, weekOf } from './history'
 import type { Entry, Food } from './types'
 
 const rice: Food = { id: 'riz', name: 'Riz', unit: 'g', protein: 7, carbs: 78, fat: 1, kcal: 357, updated_at: '' }
-const e = (id: string, date: string, qty: number, deleted = false): Entry => ({ id, date, meal: 'Midi', food_id: 'riz', qty, updated_at: '', deleted })
+const e = (id: string, date: string, qty: number, deleted = false): Entry => ({ id, date, meal: 2, food_id: 'riz', qty, updated_at: '', deleted })
 
 describe('historique', () => {
   it('additionne les aliments de chaque jour et ignore les suppressions', () => {

@@ -2,7 +2,8 @@ import { useMemo, useSyncExternalStore } from 'react'
 import seed from '../data/seedFoods.json'
 import { portionQty } from './calc'
 import { iso } from './date'
-import type { Diet, Entry, Food, Meal, Menu, MenuItem, Profile, Unit } from './types'
+import { mealKey, mealsOfDay, normalizeCheatKeys, normalizeTime, toMeal } from './meals'
+import type { Diet, Entry, Food, Meal, MealInfo, Menu, MenuItem, Profile, Unit } from './types'
 
 /**
  * Stockage local d'abord : tout est enregistré sur l'appareil (localStorage),
@@ -14,8 +15,10 @@ export interface State {
   foods: Record<string, Food>
   entries: Record<string, Entry>
   menus: Record<string, Menu>
+  /** Infos par repas et par jour (heure), clé « AAAA-MM-JJ|n ». */
+  meals: Record<string, MealInfo>
   profile: Profile
-  dirty: { foods: string[]; entries: string[]; menus: string[]; profile: boolean }
+  dirty: { foods: string[]; entries: string[]; menus: string[]; meals: string[]; profile: boolean }
   lastSync: string | null
 }
 
@@ -68,14 +71,38 @@ const defaultProfile: Profile = {
   updated_at: SEED_DATE,
 }
 
+/**
+ * Repas numérotés : les anciennes lignes du journal ont meal = 'Matin', 'Midi'…
+ * On les convertit en numéros (Matin → 1, Midi → 2, Collation → 3, Soir → 4) sans les renvoyer :
+ * le serveur est converti par supabase/migrations/003_repas_numerotes.sql, et la synchro
+ * convertit aussi ce qu'elle reçoit.
+ */
+export function normalizeEntries(entries: Record<string, Entry>): Record<string, Entry> {
+  let changed = false
+  const out: Record<string, Entry> = {}
+  for (const [id, e] of Object.entries(entries)) {
+    const meal = toMeal(e.meal)
+    if (meal !== e.meal) changed = true
+    out[id] = meal === e.meal ? e : { ...e, meal }
+  }
+  return changed ? out : entries
+}
+
+export function normalizeProfile(p: Profile): Profile {
+  if (!p.cheatMeals) return p
+  const cheatMeals = normalizeCheatKeys(p.cheatMeals)
+  return JSON.stringify(cheatMeals) === JSON.stringify(p.cheatMeals) ? p : { ...p, cheatMeals }
+}
+
 function initial(): State {
   const foods = seedFoods()
   return {
     foods,
     entries: {},
     menus: {},
+    meals: {},
     profile: defaultProfile,
-    dirty: { foods: Object.keys(foods), entries: [], menus: [], profile: true },
+    dirty: { foods: Object.keys(foods), entries: [], menus: [], meals: [], profile: true },
     lastSync: null,
   }
 }
@@ -88,7 +115,9 @@ function load(): State {
       const saved = JSON.parse(raw) as Partial<State>
       // Les anciennes sauvegardes n'ont pas forcément tous les champs (ex. menus).
       const foods = saved.foods ? backfillDiet(saved.foods, base.foods) : base.foods
-      return { ...base, ...saved, foods, dirty: { ...base.dirty, menus: [], ...saved.dirty } }
+      const profile = saved.profile ? normalizeProfile(saved.profile) : base.profile
+      const entries = saved.entries ? normalizeEntries(saved.entries) : base.entries
+      return { ...base, ...saved, foods, entries, profile, dirty: { ...base.dirty, menus: [], meals: [], ...saved.dirty } }
     }
   } catch {
     /* stockage indisponible : on repart des valeurs par défaut */
@@ -170,12 +199,39 @@ export function saveProfile(p: Omit<Profile, 'updated_at'>) {
 
 /** Marque / démarque un repas du journal comme cheat meal. On ne garde que les 6 derniers mois. */
 export function toggleCheat(date: string, meal: Meal) {
-  const key = `${date}|${meal}`
+  const key = mealKey(date, meal)
   const list = state.profile.cheatMeals ?? []
   const today = iso(new Date())
   const limit = addDays(date < today ? today : date, -183)
   const next = (list.includes(key) ? list.filter((k) => k !== key) : [...list, key]).filter((k) => k.slice(0, 10) >= limit).sort()
   saveProfile({ ...state.profile, cheatMeals: next })
+}
+
+/** Heure (facultative) d'un repas d'une journée. null ou '' l'efface. */
+export function setMealTime(date: string, meal: Meal, time: string | null) {
+  const id = mealKey(date, meal)
+  const t = normalizeTime(time)
+  const prev = state.meals[id]
+  if ((prev && !prev.deleted ? prev.time : null) === t) return
+  const m: MealInfo = { id, date, meal, time: t, deleted: t === null, updated_at: now() }
+  setState({
+    ...state,
+    meals: { ...state.meals, [id]: m },
+    dirty: { ...state.dirty, meals: uniq([...state.dirty.meals, id]) },
+  })
+}
+
+/** Heure enregistrée d'un repas, ou null. */
+export function mealTime(s: State, date: string, meal: Meal): string | null {
+  const m = s.meals[mealKey(date, meal)]
+  return m && !m.deleted ? m.time : null
+}
+
+/** Repas proposés pour un jour : le nombre habituel du profil, plus ceux déjà utilisés ce jour-là. */
+export function dayMeals(s: State, date: string): Meal[] {
+  const used: Meal[] = []
+  for (const e of Object.values(s.entries)) if (!e.deleted && e.date === date) used.push(e.meal)
+  return mealsOfDay(s.profile.mealsPerDay, used)
 }
 
 export function saveMenu(menu: Omit<Menu, 'updated_at'>) {

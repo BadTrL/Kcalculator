@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { macrosFor, portionsOf, scaleMacros, sum, targets } from '../lib/calc'
-import { activeMenus, addItemsToDay, deleteEntry, newId, saveEntry, useStore } from '../lib/store'
-import { MEALS, type Entry, type Food, type Macros, type Meal, type Menu } from '../lib/types'
+import { activeMenus, addItemsToDay, deleteEntry, mealTime, newId, saveEntry, setMealTime, useStore } from '../lib/store'
+import { mealLabel, type Entry, type Food, type Macros, type Meal, type Menu } from '../lib/types'
+import { mealKey, mealsOfDay } from '../lib/meals'
 import { FoodPicker } from './FoodPicker'
 import { iso } from '../lib/date'
 import { MacroLine, MenuEditor, useMenuTotals } from './Menus'
@@ -84,7 +85,7 @@ function AddEntry({ meal, date, entry, onClose }: { meal: Meal; date: string; en
   const foods = useStore((s) => s.foods)
   return (
     <FoodPicker
-      title={`${entry ? 'Modifier' : 'Ajouter'} · ${meal}`}
+      title={`${entry ? 'Modifier' : 'Ajouter'} · ${mealLabel(meal)}`}
       food={entry ? foods[entry.food_id] ?? null : null}
       qty={entry?.qty}
       submitLabel={entry ? 'Enregistrer' : 'Ajouter'}
@@ -116,7 +117,7 @@ function MenuChooser({ meal, date, onClose }: { meal: Meal; date: string; onClos
     <div className="modal" role="dialog" aria-label="Ajouter un menu">
       <div className="sheet">
         <div className="sheet-head">
-          <h2>Ajouter un menu · {meal}</h2>
+          <h2>Ajouter un menu · {mealLabel(meal)}</h2>
           <button className="ghost" onClick={onClose} aria-label="Fermer">✕</button>
         </div>
         <ul className="list pick">
@@ -134,6 +135,28 @@ function MenuChooser({ meal, date, onClose }: { meal: Meal; date: string; onClos
         </ul>
       </div>
     </div>
+  )
+}
+
+/** Heure facultative d'un repas, enregistrée et synchronisée. */
+function MealTime({ date, meal }: { date: string; meal: Meal }) {
+  const time = useStore((s) => mealTime(s, date, meal))
+  const label = `Heure du ${mealLabel(meal).toLowerCase()}`
+  return (
+    <span className={'meal-time' + (time ? ' set' : '')}>
+      <input
+        type="time"
+        value={time ?? ''}
+        onChange={(e) => setMealTime(date, meal, e.target.value || null)}
+        aria-label={label}
+        title={label}
+      />
+      {time && (
+        <button type="button" className="ghost" onClick={() => setMealTime(date, meal, null)} aria-label={`Effacer l'heure du ${mealLabel(meal).toLowerCase()}`}>
+          ✕
+        </button>
+      )}
+    </span>
   )
 }
 
@@ -156,21 +179,29 @@ export function Today() {
   const entries = useStore((s) => s.entries)
   const foods = useStore((s) => s.foods)
   const profile = useStore((s) => s.profile)
+  const mealInfos = useStore((s) => s.meals)
   const target = useMemo(() => targets(profile), [profile])
+  // Nombre de repas demandé à la main pour ce jour (« + Ajouter un repas »), tant qu'ils restent vides.
+  const [extra, setExtra] = useState({ date, n: 0 })
+  const extraN = extra.date === date ? extra.n : 0
 
-  const byMeal = useMemo(() => {
-    const out = Object.fromEntries(MEALS.map((m) => [m, [] as { e: Entry; f: Food; m: Macros }[]])) as Record<Meal, { e: Entry; f: Food; m: Macros }[]>
+  const { meals, byMeal } = useMemo(() => {
+    const out = new Map<Meal, { e: Entry; f: Food; m: Macros }[]>()
     for (const e of Object.values(entries)) {
       if (e.deleted || e.date !== date) continue
       const f = foods[e.food_id]
       if (!f) continue
-      ;(out[e.meal] ?? out.Collation).push({ e, f, m: macrosFor(f, e.qty) })
+      const list = out.get(e.meal) ?? []
+      list.push({ e, f, m: macrosFor(f, e.qty) })
+      out.set(e.meal, list)
     }
-    for (const m of MEALS) out[m].sort((a, b) => a.e.updated_at.localeCompare(b.e.updated_at))
-    return out
-  }, [entries, foods, date])
+    for (const list of out.values()) list.sort((a, b) => a.e.updated_at.localeCompare(b.e.updated_at))
+    const timed = Object.values(mealInfos).filter((m) => m.date === date && !m.deleted && m.time).map((m) => m.meal)
+    const meals = mealsOfDay(Math.max(profile.mealsPerDay ?? 0, extraN) || undefined, [...out.keys(), ...timed])
+    return { meals, byMeal: (m: Meal) => out.get(m) ?? [] }
+  }, [entries, foods, date, mealInfos, profile.mealsPerDay, extraN])
 
-  const total = sum(MEALS.flatMap((m) => byMeal[m].map((x) => x.m)))
+  const total = sum(meals.flatMap((m) => byMeal(m).map((x) => x.m)))
   const shift = (d: number) => setDate(shiftIso(date, d))
   const today = iso(new Date())
   const long = new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -189,13 +220,14 @@ export function Today() {
       <WeekStrip date={date} today={today} target={target.kcal} onPick={setDate} onShift={shift} />
       <Summary total={total} target={target} />
       <ProgressCard date={date} onOpen={() => setProgress(true)} />
-      {MEALS.map((meal) => {
-        const rows = byMeal[meal]
+      {meals.map((meal) => {
+        const rows = byMeal(meal)
         const t = sum(rows.map((x) => x.m))
         return (
-          <div className={'card meal' + (cheats?.includes(`${date}|${meal}`) ? ' cheat' : '')} key={meal}>
+          <div className={'card meal' + (cheats?.includes(mealKey(date, meal)) ? ' cheat' : '')} key={meal}>
             <div className="meal-head">
-              <h3>{meal}</h3>
+              <h3>{mealLabel(meal)}</h3>
+              <MealTime date={date} meal={meal} />
               <span className="muted small">
                 {r(t.kcal)} kcal · P {r(t.protein)} · G {r(t.carbs)} · L {r(t.fat)}
               </span>
@@ -221,7 +253,7 @@ export function Today() {
               {rows.length > 0 && (
                 <button
                   className="ghost add-line save-menu"
-                  onClick={() => setSaving({ name: meal, items: rows.map(({ e }) => ({ food_id: e.food_id, qty: e.qty })) })}
+                  onClick={() => setSaving({ name: mealLabel(meal), items: rows.map(({ e }) => ({ food_id: e.food_id, qty: e.qty })) })}
                 >
                   Enregistrer comme menu
                 </button>
@@ -230,6 +262,9 @@ export function Today() {
           </div>
         )
       })}
+      <button className="ghost add-meal" onClick={() => setExtra({ date, n: meals.length + 1 })}>
+        + Ajouter un repas ({mealLabel(meals.length + 1)})
+      </button>
       {msg && <p className="note">{msg}</p>}
       {choosing && <MenuChooser meal={choosing} date={date} onClose={() => setChoosing(null)} />}
       {saving && (

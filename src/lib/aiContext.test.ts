@@ -8,7 +8,7 @@ const foods: Record<string, Food> = {
   riz: { id: 'riz', name: 'Riz cuit', unit: 'g', protein: 2.7, carbs: 28, fat: 0.3, kcal: 130, updated_at: T },
   oeuf: { id: 'oeuf', name: 'Œuf', unit: 'u', protein: 6, carbs: 0.5, fat: 5, kcal: 70, updated_at: T },
 }
-const e = (id: string, date: string, food_id: string, qty: number, meal: Entry['meal'] = 'Midi'): Entry => ({ id, date, meal, food_id, qty, updated_at: T })
+const e = (id: string, date: string, food_id: string, qty: number, meal: Entry['meal'] = 2): Entry => ({ id, date, meal, food_id, qty, updated_at: T })
 
 describe('photoContext', () => {
   it('donne la cible et ce qui reste', () => {
@@ -21,13 +21,13 @@ describe('photoContext', () => {
 describe('coachContext', () => {
   it('détaille le jour et résume les jours précédents', () => {
     const entries = {
-      a: e('a', '2026-03-10', 'oeuf', 2, 'Matin'),
+      a: e('a', '2026-03-10', 'oeuf', 2, 1),
       b: e('b', '2026-03-09', 'riz', 100),
       c: { ...e('c', '2026-03-08', 'riz', 100), deleted: true },
       d: e('d', '2026-02-01', 'riz', 100), // trop ancien
     }
     const txt = coachContext({ profile, foods, entries }, '2026-03-10')
-    expect(txt).toContain('- Matin : Œuf 2 u (140 kcal')
+    expect(txt).toContain('- Repas 1 : Œuf 2 u (140 kcal')
     expect(txt).toContain('- 2026-03-09 : 130 kcal')
     expect(txt).not.toContain('2026-03-08')
     expect(txt).not.toContain('2026-02-01')
