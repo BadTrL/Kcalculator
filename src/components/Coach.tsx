@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { askCoach, type CoachMessage } from '../lib/ai'
+import { Markdown } from '../lib/markdown'
 import { coachContext } from '../lib/aiContext'
 import { iso } from '../lib/date'
 import { getState } from '../lib/store'
@@ -27,6 +28,15 @@ export function Coach() {
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const end = useRef<HTMLDivElement>(null)
+  const input = useRef<HTMLTextAreaElement>(null)
+
+  // Le champ grandit avec le texte (jusqu'à ~6 lignes, ensuite il défile).
+  useEffect(() => {
+    const el = input.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`
+  }, [text])
 
   useEffect(() => {
     try {
@@ -49,6 +59,10 @@ export function Coach() {
       const reply = await askCoach(next, coachContext(getState(), iso(new Date())))
       setMessages([...next, { role: 'assistant', content: reply }])
     } catch (e) {
+      // La question n'a pas abouti : on la retire de la discussion et on la remet dans le champ,
+      // pour pouvoir réessayer sans qu'elle soit envoyée deux fois.
+      setMessages(messages)
+      setText((t) => t || content)
       setErr(e instanceof Error ? e.message : String(e))
     } finally {
       setBusy(false)
@@ -74,20 +88,34 @@ export function Coach() {
         )}
         <div className="chat">
           {messages.map((m, i) => (
-            <div key={i} className={`bubble ${m.role}`}>{m.content}</div>
+            <div key={i} className={`bubble ${m.role}`}>{m.role === 'assistant' ? <Markdown text={m.content} /> : m.content}</div>
           ))}
           {busy && <div className="bubble assistant muted">Le coach réfléchit…</div>}
           <div ref={end} />
         </div>
         {err && <p className="note warn">{err}</p>}
         <form
-          className="row"
+          className="row coach-form"
           onSubmit={(e) => {
             e.preventDefault()
             send(text)
           }}
         >
-          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Pose ta question" aria-label="Question au coach" />
+          <textarea
+            ref={input}
+            rows={1}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              // Entrée envoie, Maj+Entrée va à la ligne (sur PC). Sur mobile, le bouton Envoyer.
+              if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && window.matchMedia('(hover: hover)').matches) {
+                e.preventDefault()
+                send(text)
+              }
+            }}
+            placeholder="Pose ta question"
+            aria-label="Question au coach"
+          />
           <button type="submit" disabled={busy || !text.trim()}>Envoyer</button>
         </form>
       </div>

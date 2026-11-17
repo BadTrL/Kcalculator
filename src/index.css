@@ -120,7 +120,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, li:focus-visibl
 
 /* Formulaires */
 label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85rem; color: var(--muted); margin: 10px 0; min-width: 0; }
-input, select {
+input, select, textarea {
   width: 100%; padding: 11px 13px; border-radius: 14px; border: 1px solid var(--line);
   background: var(--field); font-size: 1rem; min-width: 0;
 }
@@ -306,6 +306,24 @@ label.check input { width: auto; }
 .bubble { max-width: 88%; padding: 10px 14px; border-radius: 18px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .bubble.user { align-self: flex-end; background: var(--accent); color: var(--on-accent); border-bottom-right-radius: 6px; }
 .bubble.assistant { align-self: flex-start; background: var(--bg); border: 0; border-bottom-left-radius: 6px; }
+.bubble .md { white-space: normal; }
+.md > :first-child { margin-top: 0; }
+.md > :last-child { margin-bottom: 0; }
+.md p { margin: 0 0 8px; }
+.md h4, .md h5 { margin: 12px 0 6px; font-size: 1rem; line-height: 1.3; }
+.md h5 { font-size: 0.95rem; color: var(--muted); }
+.md ul, .md ol { margin: 0 0 8px; padding-left: 20px; }
+.md li { margin: 2px 0; }
+.md hr { border: 0; border-top: 1px solid var(--line); margin: 10px 0; }
+.md code { font-size: 0.9em; padding: 1px 5px; border-radius: 6px; background: var(--field); }
+.md pre { margin: 0 0 8px; padding: 8px 10px; border-radius: 10px; background: var(--field); overflow-x: auto; }
+.md pre code { padding: 0; background: none; }
+.md a { color: var(--accent); }
+.coach-form { flex-wrap: nowrap; align-items: flex-end; }
+.coach-form textarea {
+  flex: 1; resize: none; overflow-y: auto; line-height: 1.35; max-height: 160px;
+  font-family: inherit; color: inherit; field-sizing: content;
+}
 
 /* Repas numérotés : heure facultative à côté du titre */
 .meal-time { display: inline-flex; align-items: center; gap: 2px; }

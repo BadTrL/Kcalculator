@@ -85,7 +85,7 @@ supabase secrets set AI_ALLOWED_EMAILS=ton@email.fr
 ```
 `AI_ALLOWED_EMAILS` réserve cette clé partagée à ces e-mails (conseillé si quelqu'un d'autre peut créer un compte sur ton appli).
 
-Modèle utilisé : Claude Opus 5.5 (`claude-opus-5-5`), avec repli automatique sur un autre modèle si la demande est déclinée. Pour en changer : `supabase secrets set AI_MODEL=claude-sonnet-5-5` (moins cher), sans redéployer l'appli. Ordre de grandeur : quelques centimes par photo, moins pour une question au coach.
+Modèle utilisé : Claude Haiku 5.5 (`claude-haiku-5-5`), le moins cher (environ 40 fois moins qu'Opus 5.5) : une fraction de centime par question au coach. Pour un modèle plus précis : `supabase secrets set AI_MODEL=claude-sonnet-5-5` ou `claude-opus-5-5` (ceux-là se replient automatiquement sur un autre modèle si la demande est déclinée), sans redéployer l'appli.
 
 ## Synchro : comment ça marche
 
