@@ -42,6 +42,13 @@ async function callAi<T>(body: Record<string, unknown>): Promise<T> {
       /* corps non JSON */
     }
     if (!msg && ctx?.status === 404) msg = "La fonction IA n'est pas déployée (voir README, section IA)."
+    // Fonction absente ou en panne : la réponse n'a pas les en-têtes CORS, le navigateur la bloque
+    // et supabase-js ne voit qu'un échec réseau (FunctionsFetchError).
+    if (!msg && (error as Error).name === 'FunctionsFetchError') {
+      msg = navigator.onLine
+        ? "Impossible de joindre la fonction IA : elle n'est sans doute pas déployée (« supabase functions deploy ai », voir README) ou elle plante au démarrage (Supabase > Edge Functions > ai > Logs)."
+        : "Pas de connexion internet : l'IA a besoin du réseau."
+    }
     throw new Error(msg || error.message)
   }
   return data as T
