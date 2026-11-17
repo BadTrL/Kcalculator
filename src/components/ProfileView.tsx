@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ACTIVITY_LEVELS, bmr, leanMass, maintenance, targets } from '../lib/calc'
 import { saveProfile, useStore } from '../lib/store'
-import { DEFAULT_MEALS_PER_DAY, type Goal, type Profile } from '../lib/types'
+import type { Goal, Profile } from '../lib/types'
 
 const GOALS: { value: Goal; label: string }[] = [
   { value: 'seche', label: 'Sèche' },
@@ -23,7 +23,6 @@ export function ProfileView() {
     proteinCoef: String(stored.proteinCoef),
     fatCoef: String(stored.fatCoef),
     goal: stored.goal,
-    mealsPerDay: String(stored.mealsPerDay ?? DEFAULT_MEALS_PER_DAY),
   }))
   const num = (s: string) => parseFloat(s.replace(',', '.')) || 0
   const profile: Profile = {
@@ -35,13 +34,12 @@ export function ProfileView() {
     proteinCoef: num(p.proteinCoef),
     fatCoef: num(p.fatCoef),
     goal: p.goal,
-    mealsPerDay: Math.min(12, Math.max(1, Math.round(num(p.mealsPerDay)) || DEFAULT_MEALS_PER_DAY)),
     updated_at: '',
   }
   const set = (k: keyof typeof p) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setP({ ...p, [k]: e.target.value })
   const t = targets(profile)
   // On compare champ par champ ceux du formulaire (cheatMeals, updated_at… n'en font pas partie).
-  const ref: Profile = { ...stored, mealsPerDay: stored.mealsPerDay ?? DEFAULT_MEALS_PER_DAY }
+  const ref: Profile = stored
   const changed = (Object.keys(profile) as (keyof Profile)[]).some((k) => k !== 'updated_at' && profile[k] !== ref[k])
 
   return (
@@ -89,12 +87,6 @@ export function ProfileView() {
           <label>Lipides (g/kg maigre)<input inputMode="decimal" value={p.fatCoef} onChange={set('fatCoef')} /><span className="muted small">0,7 minimum</span></label>
         </div>
 
-        <h3>Journal</h3>
-        <label>
-          Nombre de repas par jour
-          <input inputMode="numeric" value={p.mealsPerDay} onChange={set('mealsPerDay')} />
-          <span className="muted small">Repas 1, Repas 2… affichés chaque jour. Tu peux en ajouter un ponctuellement depuis le journal.</span>
-        </label>
         <div className="row end">
           <button type="submit" disabled={!changed}>{changed ? 'Enregistrer' : 'Enregistré'}</button>
         </div>

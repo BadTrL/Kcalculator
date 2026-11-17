@@ -1,5 +1,6 @@
 /**
- * Fonction Edge Supabase « ai » : fait le lien entre l'appli et l'API Claude.
+ * Fonction Edge Supabase « ai » : fait le lien entre l'appli et l'API Claude
+ * (photo de plat, coach, création de menu), et relaie la recherche d'aliments Open Food Facts.
  * La clé API n'est jamais envoyée au navigateur. Elle vient, dans l'ordre :
  *   1. de la clé que le compte a enregistrée dans Réglages (Supabase Vault, migration 004) ;
  *   2. sinon du secret global ANTHROPIC_API_KEY.
@@ -12,7 +13,7 @@
  */
 import Anthropic from 'npm:@anthropic-ai/sdk@1.3.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.119.0'
-import { BadRequest, DEFAULT_MODEL, parseRequest, Refused, run } from './handler.ts'
+import { BadRequest, DEFAULT_MODEL, parseFoodSearch, parseRequest, Refused, run, searchFoods } from './handler.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -33,6 +34,22 @@ Deno.serve(async (req) => {
   })
   const { data, error } = await sb.auth.getUser()
   if (error || !data.user) return json({ error: 'Connecte-toi dans Réglages pour utiliser l’IA.' }, 401)
+
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return json({ error: 'Requête illisible' }, 400)
+  }
+
+  // Recherche d'aliments dans Open Food Facts : simple relais, sans IA ni clé API.
+  if ((body as { action?: unknown } | null)?.action === 'food_search') {
+    try {
+      return json(await searchFoods(parseFoodSearch(body)))
+    } catch (e) {
+      return json({ error: e instanceof Error ? e.message : String(e) }, e instanceof BadRequest ? 400 : 502)
+    }
+  }
 
   // 1) La clé que le compte a saisie dans Réglages (chiffrée dans Supabase Vault, migration 004).
   //    Seul le rôle service_role peut la déchiffrer : elle ne repart jamais vers le navigateur.
@@ -59,9 +76,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = parseRequest(await req.json())
+    const parsed = parseRequest(body)
     const client = new Anthropic({ apiKey })
-    return json(await run(client, Deno.env.get('AI_MODEL') || DEFAULT_MODEL, body))
+    return json(await run(client, Deno.env.get('AI_MODEL') || DEFAULT_MODEL, parsed))
   } catch (e) {
     if (e instanceof BadRequest) return json({ error: e.message }, 400)
     if (e instanceof Refused) return json({ error: e.message }, 422)

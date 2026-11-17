@@ -21,12 +21,29 @@ export interface Analysis {
   comment: string
 }
 
-export interface CoachMessage {
-  role: 'user' | 'assistant'
-  content: string
+export type { ChatMessage as CoachMessage } from './types'
+import type { ChatMessage as CoachMessage } from './types'
+
+/** Ingrédient d'un menu proposé par l'IA. ref = numéro dans la liste d'aliments envoyée (0 = nouvel aliment). */
+export interface MenuDraftItem {
+  name: string
+  ref: number
+  qty: number
+  unit: 'g' | 'ml' | 'u'
+  kcal: number
+  protein: number
+  carbs: number
+  fat: number
 }
 
-async function callAi<T>(body: Record<string, unknown>): Promise<T> {
+export interface MenuDraft {
+  name: string
+  portions: number
+  items: MenuDraftItem[]
+  comment: string
+}
+
+export async function callAi<T>(body: Record<string, unknown>): Promise<T> {
   const sb = supabase()
   if (!sb) throw new Error("Configure Supabase dans Réglages pour utiliser l'IA.")
   const { data: auth } = await sb.auth.getSession()
@@ -109,6 +126,11 @@ export function analyzePhoto(image: { data: string; mediaType: string }, note: s
 
 export async function askCoach(messages: CoachMessage[], context: string) {
   return (await callAi<{ reply: string }>({ action: 'coach', messages, context })).reply
+}
+
+/** Menu proposé par l'IA à partir d'une demande écrite et/ou d'une image. */
+export function draftMenu(prompt: string, image: { data: string; mediaType: string } | null, context: string, foods: string) {
+  return callAi<MenuDraft>({ action: 'menu', prompt, ...(image ? { image: image.data, mediaType: image.mediaType } : {}), context, foods })
 }
 
 /** Valeurs pour 100 g d'un élément estimé (le format des aliments de l'appli). */

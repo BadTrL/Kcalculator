@@ -26,7 +26,7 @@ describe('repas numérotés', () => {
   })
 
   it('affiche au moins le nombre de repas du profil, plus ceux utilisés', () => {
-    expect(mealsOfDay(undefined, [])).toEqual([1, 2, 3, 4])
+    expect(mealsOfDay(undefined, [])).toEqual([1])
     expect(mealsOfDay(3, [])).toEqual([1, 2, 3])
     expect(mealsOfDay(3, [2, 6])).toEqual([1, 2, 3, 4, 5, 6])
   })

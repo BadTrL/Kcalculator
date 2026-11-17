@@ -3,7 +3,7 @@ import seed from '../data/seedFoods.json'
 import { portionQty } from './calc'
 import { iso } from './date'
 import { mealKey, mealsOfDay, normalizeCheatKeys, normalizeTime, toMeal } from './meals'
-import type { Diet, Entry, Food, Meal, MealInfo, Menu, MenuItem, Profile, Unit } from './types'
+import type { Chat, ChatMessage, Diet, Entry, Food, Meal, MealInfo, Menu, MenuItem, Profile, Unit } from './types'
 
 /**
  * Stockage local d'abord : tout est enregistré sur l'appareil (localStorage),
@@ -17,8 +17,10 @@ export interface State {
   menus: Record<string, Menu>
   /** Infos par repas et par jour (heure), clé « AAAA-MM-JJ|n ». */
   meals: Record<string, MealInfo>
+  /** Discussions avec le coach (historique). */
+  chats: Record<string, Chat>
   profile: Profile
-  dirty: { foods: string[]; entries: string[]; menus: string[]; meals: string[]; profile: boolean }
+  dirty: { foods: string[]; entries: string[]; menus: string[]; meals: string[]; chats: string[]; profile: boolean }
   lastSync: string | null
 }
 
@@ -101,9 +103,22 @@ function initial(): State {
     entries: {},
     menus: {},
     meals: {},
+    chats: {},
     profile: defaultProfile,
-    dirty: { foods: Object.keys(foods), entries: [], menus: [], meals: [], profile: true },
+    dirty: { foods: Object.keys(foods), entries: [], menus: [], meals: [], chats: [], profile: true },
     lastSync: null,
+  }
+}
+
+/** Avant la v4, une seule discussion du coach était gardée sur l'appareil : on la reprend dans l'historique. */
+function legacyChat(): Record<string, Chat> {
+  try {
+    const old = JSON.parse(localStorage.getItem('kcalculator:coach') ?? '[]') as ChatMessage[]
+    if (!Array.isArray(old) || !old.length) return {}
+    const id = crypto.randomUUID()
+    return { [id]: { id, title: chatTitle(old), messages: old, updated_at: new Date().toISOString() } }
+  } catch {
+    return {}
   }
 }
 
@@ -117,7 +132,9 @@ function load(): State {
       const foods = saved.foods ? backfillDiet(saved.foods, base.foods) : base.foods
       const profile = saved.profile ? normalizeProfile(saved.profile) : base.profile
       const entries = saved.entries ? normalizeEntries(saved.entries) : base.entries
-      return { ...base, ...saved, foods, entries, profile, dirty: { ...base.dirty, menus: [], meals: [], ...saved.dirty } }
+      const chats = saved.chats ?? legacyChat()
+      const dirty = { ...base.dirty, menus: [], meals: [], chats: saved.chats ? [] : Object.keys(chats), ...saved.dirty }
+      return { ...base, ...saved, foods, entries, profile, chats, dirty }
     }
   } catch {
     /* stockage indisponible : on repart des valeurs par défaut */
@@ -227,11 +244,11 @@ export function mealTime(s: State, date: string, meal: Meal): string | null {
   return m && !m.deleted ? m.time : null
 }
 
-/** Repas proposés pour un jour : le nombre habituel du profil, plus ceux déjà utilisés ce jour-là. */
+/** Repas proposés pour un jour : le repas 1, plus ceux déjà utilisés ce jour-là. */
 export function dayMeals(s: State, date: string): Meal[] {
   const used: Meal[] = []
   for (const e of Object.values(s.entries)) if (!e.deleted && e.date === date) used.push(e.meal)
-  return mealsOfDay(s.profile.mealsPerDay, used)
+  return mealsOfDay(undefined, used)
 }
 
 export function saveMenu(menu: Omit<Menu, 'updated_at'>) {
@@ -277,6 +294,39 @@ export function addItemsToDay(items: MenuItem[], date: string, meal: Meal, porti
   }
   setState({ ...state, entries, dirty: { ...state.dirty, entries: uniq([...state.dirty.entries, ...ids]) } })
   return ids.length
+}
+
+/** Titre d'une discussion : le début de la première question. */
+export function chatTitle(messages: ChatMessage[]): string {
+  const first = messages.find((m) => m.role === 'user')?.content.replace(/\s+/g, ' ').trim() ?? ''
+  return first.length > 60 ? first.slice(0, 57).trimEnd() + '…' : first || 'Discussion'
+}
+
+/** Nombre max de messages gardés par discussion (le coach ne relit que les 20 derniers). */
+const CHAT_MAX = 200
+
+/** Enregistre une discussion du coach (créée si besoin). */
+export function saveChat(id: string, messages: ChatMessage[]) {
+  const prev = state.chats[id]
+  const c: Chat = { id, title: prev?.title || chatTitle(messages), messages: messages.slice(-CHAT_MAX), updated_at: now() }
+  setState({ ...state, chats: { ...state.chats, [id]: c }, dirty: { ...state.dirty, chats: uniq([...state.dirty.chats, id]) } })
+}
+
+export function deleteChat(id: string) {
+  const c = state.chats[id]
+  if (!c) return
+  setState({
+    ...state,
+    chats: { ...state.chats, [id]: { ...c, messages: [], deleted: true, updated_at: now() } },
+    dirty: { ...state.dirty, chats: uniq([...state.dirty.chats, id]) },
+  })
+}
+
+/** Discussions, la plus récente d'abord. */
+export function activeChats(s: State) {
+  return Object.values(s.chats)
+    .filter((c) => !c.deleted && c.messages.length)
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
 }
 
 export function activeMenus(s: State) {

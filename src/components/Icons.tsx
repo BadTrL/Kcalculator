@@ -47,6 +47,15 @@ const PATHS: Record<string, React.ReactNode> = {
   scan: <path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M8 9v6M11 9v6M14 9v6M17 9v6" />,
   chevL: <path d="M15 5l-7 7 7 7" />,
   chevR: <path d="M9 5l7 7-7 7" />,
+  burger: <path d="M4 7h16M4 12h16M4 17h16" />,
+  sparkle: <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z" />,
+  image: (
+    <>
+      <rect x="3" y="4" width="18" height="16" rx="3" />
+      <circle cx="9" cy="10" r="2" />
+      <path d="M21 16l-5-5-8 9" />
+    </>
+  ),
 }
 
 export function TabIcon({ id, size = 22 }: { id: keyof typeof PATHS | string; size?: number }) {

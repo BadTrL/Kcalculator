@@ -67,7 +67,7 @@
 
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
-button, input, select { font: inherit; color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
 
 .app { max-width: 760px; margin: 0 auto; padding: 0 18px calc(110px + env(safe-area-inset-bottom)); }
 header { display: flex; align-items: center; justify-content: space-between; padding: 14px 0 4px; gap: 16px; min-height: 44px; }
@@ -93,6 +93,25 @@ h3 { font-size: 1rem; margin: 0 0 10px; font-weight: 700; }
   padding: 4px 0; background: none; border: 0; border-radius: 20px; font-size: 0.66rem; font-weight: 600; color: var(--muted); cursor: pointer;
 }
 .tabs.bottom button.on { color: var(--accent-text); background: var(--accent-soft); }
+/* Pastille du compte (initiales ou « Sign In ») et menu ☰ */
+.head-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.avatar {
+  min-width: 38px; height: 38px; padding: 0 10px; border-radius: 999px; border: 0; cursor: pointer;
+  background: var(--accent); color: var(--on-accent); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.04em;
+}
+.avatar.signin { background: var(--card); color: var(--accent-text); box-shadow: var(--shadow); letter-spacing: 0; }
+.more { position: relative; }
+.burger { width: 40px; height: 40px; }
+.burger.on { background: var(--accent-soft); color: var(--accent-text); }
+.dropdown {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 20; min-width: 200px; padding: 6px;
+  background: var(--card); border-radius: 18px; box-shadow: var(--shadow-up); display: flex; flex-direction: column;
+}
+.dropdown button {
+  display: flex; align-items: center; gap: 10px; padding: 11px 12px; border: 0; border-radius: 12px; background: none;
+  cursor: pointer; text-align: left; justify-content: flex-start; font-weight: 600; color: var(--text);
+}
+.dropdown button:hover, .dropdown button.on { background: var(--accent-soft); color: var(--accent-text); }
 @media (min-width: 720px) {
   .tabs.top { display: flex; }
   .tabs.bottom { display: none; }
@@ -333,4 +352,30 @@ label.check input { width: auto; }
 }
 .meal-time.set input[type='time'] { color: var(--text); border-style: solid; font-weight: 600; }
 .meal-time button { min-height: 32px; padding: 0 6px; color: var(--muted); }
-.add-meal { display: block; width: 100%; margin: 4px 0 12px; color: var(--accent-text); font-weight: 600; }
+.add-meal {
+  display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; margin: 4px 0 12px;
+  background: none; border: 2px dashed var(--line); border-radius: var(--radius); color: var(--accent-text); font-weight: 600; cursor: pointer;
+}
+.add-meal span { font-size: 1.4rem; line-height: 1; }
+.add-meal:hover { background: var(--accent-soft); border-color: var(--accent-soft); }
+
+/* Choix d'un aliment : Mes aliments puis la base publique */
+.list-title { margin: 14px 0 6px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.add-off { color: var(--accent-text); font-weight: 600; }
+
+/* Menu créé par l'IA : provenance de chaque ingrédient */
+.ai-items .ai-name { min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+.ai-items .ai-macros .badge { margin: 0 6px 0 0; }
+.badge.src-mine { background: var(--accent-soft); color: var(--accent-text); }
+.badge.src-new { background: var(--warn-bg); color: var(--warn-fg); }
+
+/* Coach : historique et création de menu */
+.coach-head { flex-wrap: wrap; }
+.coach-head h3 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0; }
+.coach-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+.coach-menu { width: 100%; margin: 4px 0 8px; }
+.chat-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.chat-list li > div { display: flex; flex-direction: column; min-width: 0; }
+.chat-list li strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-list li.on { outline: 2px solid var(--accent-soft); }
+.sheet textarea { background: var(--bg); width: 100%; resize: vertical; }

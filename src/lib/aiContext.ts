@@ -63,3 +63,21 @@ export function coachContext(d: Data, today: string): string {
   if (avg7) out.push(`Moyenne des jours notés sur 7 jours : ${line(avg7)}.`)
   return out.join('\n')
 }
+
+/**
+ * Aliments enregistrés envoyés à l'IA pour composer un menu, numérotés [1], [2]…
+ * L'IA renvoie ces numéros : `ids[n - 1]` donne l'aliment correspondant.
+ * Les aliments estimés à partir d'une photo sont laissés de côté (valeurs approximatives).
+ */
+export function foodsForMenu(foods: Record<string, Food>, max = 600): { text: string; ids: string[] } {
+  const list = Object.values(foods)
+    .filter((f) => !f.deleted && f.brand !== 'Estimation photo')
+    .sort((a, b) => b.updated_at.localeCompare(a.updated_at))
+    .slice(0, max)
+    .sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }))
+  const per = (f: Food) => (f.unit === 'u' ? '/ u' : `/ 100 ${f.unit}`)
+  const lines = list.map(
+    (f, i) => `[${i + 1}] ${f.name}${f.brand ? ` (${f.brand})` : ''} – ${r(f.kcal)} kcal, P ${f.protein}, G ${f.carbs}, L ${f.fat} ${per(f)}`,
+  )
+  return { text: lines.join('\n'), ids: list.map((f) => f.id) }
+}

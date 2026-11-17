@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BadRequest, cleanAnalysis, parseRequest } from './handler'
+import { BadRequest, cleanAnalysis, cleanMenu, parseRequest } from './handler'
 
 describe('parseRequest', () => {
   it('accepte une analyse de photo', () => {
@@ -40,5 +40,34 @@ describe('cleanAnalysis', () => {
     })
     expect(a.items).toEqual([{ name: 'Riz', grams: 180, kcal: 230, protein: 4.9, carbs: 50, fat: 0 }])
     expect(a.confidence).toBe('faible')
+  })
+})
+
+describe('menu', () => {
+  it('accepte une demande écrite sans image', () => {
+    const r = parseRequest({ action: 'menu', prompt: 'bowl poulet riz', context: 'ctx', foods: '[1] Riz' })
+    expect(r).toMatchObject({ action: 'menu', prompt: 'bowl poulet riz', foods: '[1] Riz' })
+  })
+  it('refuse une demande vide', () => {
+    expect(() => parseRequest({ action: 'menu', prompt: '  ' })).toThrow(BadRequest)
+  })
+  it('écarte les numéros d’aliment inconnus et les quantités nulles', () => {
+    const m = cleanMenu(
+      {
+        name: 'Bowl',
+        portions: 0,
+        comment: 'ok',
+        items: [
+          { name: 'Riz', ref: 2, qty: 80, unit: 'g', kcal: 280, protein: 6, carbs: 62, fat: 1 },
+          { name: 'Poulet', ref: 9, qty: 150, unit: 'kg', kcal: 165, protein: 34, carbs: 0, fat: 3 },
+          { name: 'Sel', ref: 0, qty: 0, unit: 'g', kcal: 0, protein: 0, carbs: 0, fat: 0 },
+        ],
+      },
+      3,
+    )
+    expect(m.portions).toBe(1)
+    expect(m.items).toHaveLength(2)
+    expect(m.items[0].ref).toBe(2)
+    expect(m.items[1]).toMatchObject({ ref: 0, unit: 'g' })
   })
 })

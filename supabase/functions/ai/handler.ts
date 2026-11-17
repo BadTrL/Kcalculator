@@ -31,7 +31,36 @@ export interface CoachRequest {
   context: string
 }
 
-export type AiRequest = AnalyzeRequest | CoachRequest
+/** Création d'un menu à partir d'une demande écrite et/ou d'une image (recette, carte, plat, liste de courses). */
+export interface MenuRequest {
+  action: 'menu'
+  prompt: string
+  image?: string // base64 sans préfixe data:
+  mediaType?: MediaType
+  context: string // objectifs de la personne
+  foods: string // ses aliments enregistrés, une ligne « [n] nom – kcal / 100 g »
+}
+
+export type AiRequest = AnalyzeRequest | CoachRequest | MenuRequest
+
+export interface MenuDraftItem {
+  name: string
+  /** Numéro de l'aliment dans la liste de la personne (0 = aliment absent de sa liste). */
+  ref: number
+  qty: number
+  unit: 'g' | 'ml' | 'u'
+  kcal: number
+  protein: number
+  carbs: number
+  fat: number
+}
+
+export interface MenuDraft {
+  name: string
+  portions: number
+  items: MenuDraftItem[]
+  comment: string
+}
 
 export interface AnalyzedItem {
   name: string
@@ -82,6 +111,43 @@ const ANALYSIS_SCHEMA = {
   },
 } as const
 
+const MENU_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['name', 'portions', 'items', 'comment'],
+  properties: {
+    name: { type: 'string', description: 'Nom court du menu, en français (ex. « Bowl poulet riz brocolis »).' },
+    portions: { type: 'integer', description: 'Nombre de repas que donnent ces quantités (1 sauf batch cooking).' },
+    items: {
+      type: 'array',
+      description: 'Ingrédients du menu, avec la quantité totale à cuisiner pour toutes les portions.',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['name', 'ref', 'qty', 'unit', 'kcal', 'protein', 'carbs', 'fat'],
+        properties: {
+          name: { type: 'string', description: 'Ingrédient, en français (ex. « Riz basmati cru »).' },
+          ref: { type: 'integer', description: "Numéro [n] de l'aliment dans la liste de la personne s'il correspond, sinon 0." },
+          qty: { type: 'number', description: "Quantité, dans l'unité indiquée." },
+          unit: { type: 'string', enum: ['g', 'ml', 'u'], description: "Celle de l'aliment de la liste s'il y en a un ; « u » = unité (œuf, tranche…)." },
+          kcal: { type: 'number', description: 'kcal pour cette quantité (pas pour 100 g).' },
+          protein: { type: 'number', description: 'Protéines en g pour cette quantité.' },
+          carbs: { type: 'number', description: 'Glucides en g pour cette quantité.' },
+          fat: { type: 'number', description: 'Lipides en g pour cette quantité.' },
+        },
+      },
+    },
+    comment: { type: 'string', description: "Une à trois phrases : pourquoi ce menu colle à l'objectif, ou ce qu'il faut vérifier." },
+  },
+} as const
+
+const MENU_SYSTEM = `Tu composes des menus (repas) pour une appli de suivi des calories et des macros. Réponds en français, tutoiement.
+La personne décrit ce qu'elle veut (texte) et/ou envoie une image : recette, plat, carte de restaurant, liste de courses, contenu du frigo…
+Propose UN menu réaliste avec ses ingrédients et leurs quantités en grammes (ou ml, ou unités pour les œufs, tranches…).
+Utilise en priorité les aliments de SA liste : si un ingrédient y correspond, mets son numéro dans ref et utilise son unité. Sinon ref = 0 et estime les valeurs avec des références type Ciqual.
+Indique les quantités crues ou cuites comme le nom de l'aliment l'indique. Compte l'huile de cuisson et les sauces.
+Si la personne ne précise pas de quantité, adapte les portions à son objectif (un repas, pas la journée entière). Si elle parle de batch cooking ou de plusieurs repas, mets le nombre de portions et les quantités totales.`
+
 const ANALYZE_SYSTEM = `Tu es un nutritionniste qui estime le contenu d'un repas à partir d'une photo, pour une appli de suivi des calories et des macros.
 Décompose le plat en composants (féculent, protéine, légumes, sauce, matière grasse de cuisson, boisson…). Pour chacun, estime le poids de la portion visible en grammes, puis les kcal, protéines, glucides et lipides de cette portion, en t'appuyant sur des valeurs nutritionnelles de référence (type Ciqual).
 Repère l'échelle avec l'assiette, les couverts ou l'emballage. Compte l'huile et les sauces même peu visibles, elles sont souvent sous-estimées.
@@ -128,6 +194,26 @@ export function parseRequest(body: unknown): AiRequest {
     if (!messages.length || messages[messages.length - 1].role !== 'user') throw new BadRequest('Le dernier message doit venir de toi')
     return { action: 'coach', messages, context: str(b.context ?? '', 12000, 'context') }
   }
+  if (b.action === 'menu') {
+    const prompt = typeof b.prompt === 'string' ? b.prompt.slice(0, 2000) : ''
+    let image: string | undefined
+    let mediaType: MediaType | undefined
+    if (b.image != null) {
+      image = str(b.image, MAX_IMAGE_B64 + 1, 'image')
+      if (image.length > MAX_IMAGE_B64) throw new BadRequest('Image trop lourde')
+      if (!MEDIA_TYPES.includes(b.mediaType as MediaType)) throw new BadRequest("Format d'image non pris en charge")
+      mediaType = b.mediaType as MediaType
+    }
+    if (!prompt.trim() && !image) throw new BadRequest('Décris le menu voulu ou ajoute une image')
+    return {
+      action: 'menu',
+      prompt,
+      image,
+      mediaType,
+      context: typeof b.context === 'string' ? b.context.slice(0, 4000) : '',
+      foods: typeof b.foods === 'string' ? b.foods.slice(0, 40000) : '',
+    }
+  }
   throw new BadRequest('Action inconnue')
 }
 
@@ -151,6 +237,28 @@ export function cleanAnalysis(raw: unknown): Analysis {
     .filter((it) => it.name && it.grams > 0)
   const confidence = a.confidence === 'bonne' || a.confidence === 'moyenne' ? a.confidence : 'faible'
   return { dish: String(a.dish ?? 'Plat').trim().slice(0, 80) || 'Plat', items, confidence, comment: String(a.comment ?? '').trim() }
+}
+
+/** Nettoie le menu proposé par le modèle. `maxRef` = nombre d'aliments dans la liste envoyée. */
+export function cleanMenu(raw: unknown, maxRef: number): MenuDraft {
+  const m = (raw ?? {}) as Partial<MenuDraft>
+  const items = (Array.isArray(m.items) ? m.items : [])
+    .map((it) => {
+      const ref = Math.round(Number(it?.ref))
+      return {
+        name: String(it?.name ?? '').trim().slice(0, 80),
+        ref: Number.isFinite(ref) && ref >= 1 && ref <= maxRef ? ref : 0,
+        qty: round1(it?.qty),
+        unit: it?.unit === 'ml' || it?.unit === 'u' ? it.unit : 'g',
+        kcal: round1(it?.kcal),
+        protein: round1(it?.protein),
+        carbs: round1(it?.carbs),
+        fat: round1(it?.fat),
+      } as MenuDraftItem
+    })
+    .filter((it) => it.name && it.qty > 0)
+  const portions = Math.min(30, Math.max(1, Math.round(Number(m.portions)) || 1))
+  return { name: String(m.name ?? 'Menu').trim().slice(0, 80) || 'Menu', portions, items, comment: String(m.comment ?? '').trim() }
 }
 
 function textOf(msg: Anthropic.Beta.BetaMessage) {
@@ -216,6 +324,64 @@ export async function coach(client: Anthropic, model: string, req: CoachRequest)
   return { reply: textOf(msg).trim() }
 }
 
+export async function menu(client: Anthropic, model: string, req: MenuRequest): Promise<MenuDraft> {
+  const maxRef = (req.foods.match(/^\[\d+\]/gm) ?? []).length
+  const text = [
+    req.prompt.trim() ? `Demande : ${req.prompt.trim()}` : "Demande : compose un menu à partir de l'image.",
+    req.context ? `Contexte de la personne :\n${req.context}` : '',
+    req.foods
+      ? `Ses aliments enregistrés (valeurs pour 100 g / 100 ml, ou pour 1 unité si « / u ») :\n${req.foods}`
+      : "Elle n'a aucun aliment enregistré : ref = 0 partout.",
+  ]
+    .filter(Boolean)
+    .join('\n\n')
+  const content: Anthropic.Beta.BetaContentBlockParam[] = []
+  if (req.image && req.mediaType) content.push({ type: 'image', source: { type: 'base64', media_type: req.mediaType, data: req.image } })
+  content.push({ type: 'text', text })
+  const msg = await client.beta.messages.create({
+    ...fallback(model),
+    model,
+    max_tokens: 16000,
+    system: MENU_SYSTEM,
+    output_config: { effort: 'medium', format: { type: 'json_schema', schema: MENU_SCHEMA } },
+    messages: [{ role: 'user', content }],
+  })
+  checkStop(msg)
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(textOf(msg))
+  } catch {
+    throw new Error("Réponse de l'IA illisible, réessaie.")
+  }
+  return cleanMenu(parsed, maxRef)
+}
+
 export function run(client: Anthropic, model: string, req: AiRequest) {
-  return req.action === 'analyze' ? analyze(client, model, req) : coach(client, model, req)
+  if (req.action === 'analyze') return analyze(client, model, req)
+  if (req.action === 'menu') return menu(client, model, req)
+  return coach(client, model, req)
+}
+
+/**
+ * Recherche d'aliments par nom dans Open Food Facts (moteur search.openfoodfacts.org).
+ * Ce moteur n'autorise pas les appels directs depuis un navigateur (CORS) : la fonction sert de relais.
+ * Pas besoin de clé API Anthropic pour cette action.
+ */
+export const OFF_FIELDS = 'code,product_name,product_name_fr,brands,nutriments,quantity,ingredients_analysis_tags'
+
+export function parseFoodSearch(body: unknown): string {
+  const b = (body ?? {}) as Record<string, unknown>
+  const q = typeof b.q === 'string' ? b.q.trim().slice(0, 100) : ''
+  if (q.length < 2) throw new BadRequest('Recherche trop courte')
+  return q
+}
+
+export async function searchFoods(q: string, fetchFn: typeof fetch = fetch): Promise<{ hits: unknown[] }> {
+  const params = new URLSearchParams({ q, page_size: '24', langs: 'fr', fields: OFF_FIELDS })
+  const res = await fetchFn(`https://search.openfoodfacts.org/search?${params}`, {
+    headers: { 'User-Agent': 'Kcalculator/1.0 (appli perso de suivi nutritionnel)' },
+  })
+  if (!res.ok) throw new Error(`Open Food Facts : erreur ${res.status}`)
+  const json = (await res.json()) as { hits?: unknown[] }
+  return { hits: Array.isArray(json.hits) ? json.hits : [] }
 }

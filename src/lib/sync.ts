@@ -51,7 +51,7 @@ const isMissingTable = (e: { code?: string; message?: string }) =>
   e.code === 'PGRST205' || e.code === '42P01' || /could not find the table|relation .* does not exist/i.test(e.message ?? '')
 
 // Tables ajoutées par une migration : si elles manquent, on synchronise le reste quand même.
-const OPTIONAL_TABLES = new Set<string>(['meals'])
+const OPTIONAL_TABLES = new Set<string>(['meals', 'chats'])
 /** Tables optionnelles absentes du projet Supabase pendant cette synchro. */
 let missingTables = new Set<string>()
 
@@ -77,7 +77,7 @@ async function fetchSince(sb: SupabaseClient, table: string, since: string) {
 }
 
 // Tables synchronisées ligne par ligne : même nom côté appli et côté Supabase.
-const TABLES = ['foods', 'entries', 'menus', 'meals'] as const
+const TABLES = ['foods', 'entries', 'menus', 'meals', 'chats'] as const
 type Row = { id: string; updated_at: string; deleted?: boolean }
 
 // Colonnes ajoutées par supabase/migrations/002_vege_batch.sql. Toujours envoyées avec une valeur,
@@ -183,6 +183,7 @@ export async function sync(): Promise<string> {
       entries: merged.entries as State['entries'],
       menus: merged.menus as State['menus'],
       meals: merged.meals as State['meals'],
+      chats: merged.chats as State['chats'],
       profile,
       dirty: {
         foods: stillDirty('foods'),
@@ -190,6 +191,7 @@ export async function sync(): Promise<string> {
         menus: stillDirty('menus'),
         // Table absente côté serveur : rien n'a été envoyé, tout reste à envoyer.
         meals: missingTables.has('meals') ? cur.dirty.meals : stillDirty('meals'),
+        chats: missingTables.has('chats') ? cur.dirty.chats : stillDirty('chats'),
         profile: cur.profile.updated_at > start,
       },
       lastSync: mark,
@@ -208,6 +210,7 @@ export async function sync(): Promise<string> {
     }
     if (missingMigration) return 'Synchronisé, sauf végé/vegan et batch : lance supabase/migrations/002_vege_batch.sql'
     if (missingTables.has('meals')) return 'Synchronisé, sauf les heures des repas : lance supabase/migrations/003_repas_numerotes.sql'
+    if (missingTables.has('chats')) return "Synchronisé, sauf l'historique du coach : lance supabase/migrations/005_historique_coach.sql"
     return 'Synchronisé'
   } finally {
     running = false

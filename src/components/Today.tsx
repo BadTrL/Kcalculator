@@ -197,9 +197,9 @@ export function Today() {
     }
     for (const list of out.values()) list.sort((a, b) => a.e.updated_at.localeCompare(b.e.updated_at))
     const timed = Object.values(mealInfos).filter((m) => m.date === date && !m.deleted && m.time).map((m) => m.meal)
-    const meals = mealsOfDay(Math.max(profile.mealsPerDay ?? 0, extraN) || undefined, [...out.keys(), ...timed])
+    const meals = mealsOfDay(extraN || undefined, [...out.keys(), ...timed])
     return { meals, byMeal: (m: Meal) => out.get(m) ?? [] }
-  }, [entries, foods, date, mealInfos, profile.mealsPerDay, extraN])
+  }, [entries, foods, date, mealInfos, extraN])
 
   const total = sum(meals.flatMap((m) => byMeal(m).map((x) => x.m)))
   const shift = (d: number) => setDate(shiftIso(date, d))
@@ -262,8 +262,8 @@ export function Today() {
           </div>
         )
       })}
-      <button className="ghost add-meal" onClick={() => setExtra({ date, n: meals.length + 1 })}>
-        + Ajouter un repas ({mealLabel(meals.length + 1)})
+      <button className="add-meal" onClick={() => setExtra({ date, n: meals.length + 1 })} aria-label={`Ajouter un repas (${mealLabel(meals.length + 1)})`}>
+        <span aria-hidden>+</span> {mealLabel(meals.length + 1)}
       </button>
       {msg && <p className="note">{msg}</p>}
       {choosing && <MenuChooser meal={choosing} date={date} onClose={() => setChoosing(null)} />}

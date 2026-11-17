@@ -27,7 +27,7 @@ export function normalizeCheatKeys(list: string[] | undefined): string[] | undef
   return Array.from(new Set(out)).sort()
 }
 
-/** Liste des repas à afficher : au moins `perDay`, plus tous ceux déjà utilisés ce jour-là. */
+/** Liste des repas à afficher : au moins `perDay` (1 par défaut), plus tous ceux déjà utilisés ce jour-là. */
 export function mealsOfDay(perDay: number | undefined, used: Iterable<Meal>): Meal[] {
   let n = Math.max(1, Math.round(perDay ?? DEFAULT_MEALS_PER_DAY))
   for (const m of used) n = Math.max(n, m)

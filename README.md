@@ -61,7 +61,7 @@ Tu peux aussi sauter l'étape 3 et saisir l'URL et la clé dans **Réglages**, s
 
 Ensuite, va dans **Réglages**, crée ton compte, puis connecte-toi avec le même compte sur chaque appareil.
 
-### 4. IA : photo de plat et coach (facultatif)
+### 4. IA : photo de plat, coach et menus (facultatif)
 
 L'IA passe par une **fonction Supabase** (`supabase/functions/ai`) qui appelle l'API Claude : ta clé API Anthropic n'est jamais dans l'appli ni sur GitHub, et seuls les comptes connectés peuvent s'en servir.
 
@@ -74,7 +74,11 @@ L'IA passe par une **fonction Supabase** (`supabase/functions/ai`) qui appelle l
    supabase functions deploy ai
    ```
    `<ref-de-ton-projet>` est la partie `xxxx` de `https://xxxx.supabase.co`.
-4. Dans l'appli, connecte-toi dans Réglages, colle ta clé dans **Intelligence artificielle** et enregistre. Utilise ensuite « 📷 Photo » ou l'onglet Coach.
+4. Dans l'appli, connecte-toi dans Réglages, colle ta clé dans **Intelligence artificielle** et enregistre. Utilise ensuite « 📷 Photo », l'onglet Coach ou « ✨ IA » dans Mes menus.
+
+La même fonction relaie aussi la **recherche par nom dans Open Food Facts** (choix d'un aliment) : le moteur de recherche d'Open Food Facts refuse les appels directs depuis un navigateur. Cette recherche n'utilise pas l'IA ni ta clé, mais il faut être connecté et avoir déployé la fonction. Après une mise à jour de l'appli qui touche `supabase/functions/ai`, relance `supabase functions deploy ai`.
+
+L'historique des discussions avec le coach est synchronisé entre tes appareils une fois `supabase/migrations/005_historique_coach.sql` lancé (sinon il reste sur l'appareil).
 
 La clé est traitée comme un mot de passe : champ masqué, chiffrée par Supabase Vault, propre à ton compte. L'appli peut la remplacer ou la supprimer mais ne peut plus la relire (elle affiche seulement ses 4 derniers caractères) ; seule la fonction « ai » la déchiffre.
 

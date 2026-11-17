@@ -22,8 +22,8 @@ export interface Food {
 /** Numéro du repas dans la journée : 1, 2, 3… */
 export type Meal = number
 
-/** Nombre de repas affichés par défaut dans le journal. */
-export const DEFAULT_MEALS_PER_DAY = 4
+/** Nombre de repas affichés par défaut dans le journal : un seul, le bouton + en ajoute d'autres. */
+export const DEFAULT_MEALS_PER_DAY = 1
 
 /** Anciens créneaux nommés (avant les repas numérotés) et leur numéro. */
 export const LEGACY_MEALS: Record<string, Meal> = { Matin: 1, Midi: 2, Collation: 3, Soir: 4 }
@@ -63,7 +63,7 @@ export interface Profile {
   goal: Goal
   /** Cheat meals marqués dans le journal, clés « AAAA-MM-JJ|Repas ». Synchronisé avec le profil. */
   cheatMeals?: string[]
-  /** Nombre de repas affichés chaque jour dans le journal (4 par défaut). */
+  /** Ancien réglage « repas par jour » (avant la v4). N'est plus utilisé : le journal part d'un seul repas. */
   mealsPerDay?: number
   updated_at: string
 }
@@ -78,6 +78,21 @@ export interface Macros {
 export interface MenuItem {
   food_id: string
   qty: number
+}
+
+/** Un message d'une discussion avec le coach. */
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+/** Discussion avec le coach IA, gardée dans l'historique et synchronisée. */
+export interface Chat {
+  id: string
+  title: string
+  messages: ChatMessage[]
+  updated_at: string
+  deleted?: boolean
 }
 
 /** Repas déjà calculé, enregistré pour être réutilisé. */

@@ -6,6 +6,8 @@ import { mealLabel, type Diet, type Food, type Macros, type Meal, type Menu, typ
 import { guessMeal } from '../lib/meals'
 import { DietBadge, DietFilter } from './Diet'
 import { FoodPicker } from './FoodPicker'
+import { AiMenu } from './AiMenu'
+import { TabIcon } from './Icons'
 
 const r = (x: number) => Math.round(x)
 
@@ -143,8 +145,7 @@ function AddToJournal({ menu, onClose }: { menu: Menu; onClose: (msg?: string) =
   const [spread, setSpread] = useState(false)
   const days = portions > 1 && spread ? portions : 1
   const meals = useStore((s) => dayMeals(s, date))
-  const perDay = useStore((s) => s.profile.mealsPerDay)
-  const [meal, setMeal] = useState<Meal>(() => guessMeal(perDay ?? 4))
+  const [meal, setMeal] = useState<Meal>(() => guessMeal(meals.length))
   return (
     <div className="modal" role="dialog" aria-label="Ajouter au journal">
       <form
@@ -220,6 +221,7 @@ export function Menus() {
   const [msg, setMsg] = useState<string | null>(null)
   const [diet, setDiet] = useState<Diet | null>(null)
   const [batchOnly, setBatchOnly] = useState(false)
+  const [ai, setAi] = useState(false)
   const foods = useStore((s) => s.foods)
   const list = menus.filter(
     (m) =>
@@ -232,7 +234,10 @@ export function Menus() {
     <section>
       <div className="toolbar">
         <input type="search" placeholder={`Rechercher parmi ${menus.length} menus`} value={q} onChange={(e) => setQ(e.target.value)} />
-        <button onClick={() => setEdit({})}>+ Nouveau menu</button>
+        <button className="secondary" onClick={() => setAi(true)} title="Créer un menu avec l'IA, à partir d'une demande ou d'une image">
+          <TabIcon id="sparkle" size={18} /> IA
+        </button>
+        <button onClick={() => setEdit({})}>+ Nouveau</button>
       </div>
       <div className="filters">
         <DietFilter value={diet} onChange={setDiet} />
@@ -252,6 +257,14 @@ export function Menus() {
         </div>
       )}
       {edit && <MenuEditor menu={edit} onClose={() => setEdit(null)} />}
+      {ai && (
+        <AiMenu
+          onClose={(saved) => {
+            setAi(false)
+            if (saved) setMsg(`Menu « ${saved.name} » créé. Touche-le pour le modifier.`)
+          }}
+        />
+      )}
       {adding && (
         <AddToJournal
           menu={adding}

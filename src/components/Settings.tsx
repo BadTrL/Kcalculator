@@ -137,7 +137,7 @@ export function Settings({ status, onSync }: { status: string; onSync: () => voi
   const [email, setEmail] = useState('')
   const [pwd, setPwd] = useState('')
   const [msg, setMsg] = useState<string | null>(null)
-  const pending = useStore((s) => s.dirty.foods.length + s.dirty.entries.length + s.dirty.menus.length + s.dirty.meals.length + (s.dirty.profile ? 1 : 0))
+  const pending = useStore((s) => s.dirty.foods.length + s.dirty.entries.length + s.dirty.menus.length + s.dirty.meals.length + s.dirty.chats.length + (s.dirty.profile ? 1 : 0))
   const lastSync = useStore((s) => s.lastSync)
   const [theme, setT] = useState<Theme>(getTheme)
 
@@ -175,6 +175,7 @@ export function Settings({ status, onSync }: { status: string; onSync: () => voi
         if (!confirm('Remplacer les données de cet appareil par cette sauvegarde ?')) return
         const menus = s.menus ?? {}
         const meals = s.meals ?? {}
+        const chats = s.chats ?? {}
         // Les sauvegardes d'avant les repas numérotés ont meal = 'Matin', 'Midi'… : on convertit.
         const entries = normalizeEntries(s.entries)
         const profile = normalizeProfile(s.profile)
@@ -184,7 +185,8 @@ export function Settings({ status, onSync }: { status: string; onSync: () => voi
           profile,
           menus,
           meals,
-          dirty: { foods: Object.keys(s.foods), entries: Object.keys(entries), menus: Object.keys(menus), meals: Object.keys(meals), profile: true },
+          chats,
+          dirty: { foods: Object.keys(s.foods), entries: Object.keys(entries), menus: Object.keys(menus), meals: Object.keys(meals), chats: Object.keys(chats), profile: true },
           lastSync: null,
         })
         setMsg('Sauvegarde importée.')

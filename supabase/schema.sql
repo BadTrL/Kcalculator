@@ -58,6 +58,18 @@ create table if not exists public.meals (
   primary key (user_id, id)
 );
 
+-- Discussions avec le coach IA (historique). messages = [{ role, content }, …].
+create table if not exists public.chats (
+  user_id uuid not null references auth.users on delete cascade default auth.uid(),
+  id text not null,
+  title text not null default '',
+  messages jsonb not null default '[]',
+  deleted boolean not null default false,
+  updated_at timestamptz not null,
+  synced_at timestamptz not null default now(),
+  primary key (user_id, id)
+);
+
 create table if not exists public.profiles (
   user_id uuid primary key references auth.users on delete cascade default auth.uid(),
   data jsonb not null,
@@ -83,17 +95,22 @@ create trigger menus_synced before insert or update on public.menus
 drop trigger if exists meals_synced on public.meals;
 create trigger meals_synced before insert or update on public.meals
   for each row execute function public.touch_synced_at();
+drop trigger if exists chats_synced on public.chats;
+create trigger chats_synced before insert or update on public.chats
+  for each row execute function public.touch_synced_at();
 
 create index if not exists foods_synced_idx on public.foods (user_id, synced_at);
 create index if not exists entries_synced_idx on public.entries (user_id, synced_at);
 create index if not exists menus_synced_idx on public.menus (user_id, synced_at);
 create index if not exists meals_synced_idx on public.meals (user_id, synced_at);
+create index if not exists chats_synced_idx on public.chats (user_id, synced_at);
 
 -- Chaque compte ne voit et ne modifie que ses propres données.
 alter table public.foods enable row level security;
 alter table public.entries enable row level security;
 alter table public.menus enable row level security;
 alter table public.meals enable row level security;
+alter table public.chats enable row level security;
 alter table public.profiles enable row level security;
 
 drop policy if exists "own foods" on public.foods;
@@ -107,6 +124,9 @@ create policy "own menus" on public.menus for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 drop policy if exists "own meals" on public.meals;
 create policy "own meals" on public.meals for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "own chats" on public.chats;
+create policy "own chats" on public.chats for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 drop policy if exists "own profile" on public.profiles;
 create policy "own profile" on public.profiles for all
