@@ -4,7 +4,8 @@
  */
 import type Anthropic from '@anthropic-ai/sdk'
 
-export const DEFAULT_MODEL = 'claude-opus-5-5'
+/** Haiku 5.5 : environ 40 fois moins cher qu'Opus 5.5, suffisant pour la photo et le coach. */
+export const DEFAULT_MODEL = 'claude-haiku-5-5'
 /** Taille max d'une image envoyée (en caractères base64, ~4,5 Mo). L'appli redimensionne avant. */
 export const MAX_IMAGE_B64 = 6_000_000
 
@@ -91,7 +92,7 @@ Réponds en français, tutoiement.`
 
 const COACH_SYSTEM = `Tu es le coach nutrition de l'appli Kcalculator. Tu tutoies la personne et tu réponds en français.
 Tu t'appuies sur ses données réelles (fournies ci-dessous) : objectif, cibles caloriques et macros, journal des derniers jours.
-Sois concret et bref : quelques phrases ou une courte liste, avec des chiffres tirés de ses données quand c'est utile. Propose des ajustements réalistes (aliments, portions, timing), sans culpabiliser.
+Sois concret et bref : quelques phrases ou une courte liste, avec des chiffres tirés de ses données quand c'est utile. Tu peux mettre en forme en Markdown simple (gras, listes, titres courts), sans tableau. Propose des ajustements réalistes (aliments, portions, timing), sans culpabiliser.
 Un écart ponctuel (cheat meal) n'annule pas une semaine régulière : replace-le dans la moyenne de la semaine.
 Tu n'es pas médecin : pour un problème de santé, une grossesse, un trouble du comportement alimentaire ou un régime très restrictif, recommande un professionnel de santé.`
 
@@ -165,8 +166,9 @@ function checkStop(msg: Anthropic.Beta.BetaMessage) {
   if (msg.stop_reason === 'refusal') throw new Refused("L'IA a refusé de répondre à cette demande.")
 }
 
-/** Repli automatique sur un autre modèle si le modèle principal décline la demande. */
-const fallback = () => ({ betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const })
+/** Repli automatique sur un autre modèle si le modèle principal décline la demande (pas proposé pour Haiku). */
+export const fallback = (model: string) =>
+  model.startsWith('claude-haiku') ? {} : { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const }
 
 export async function analyze(client: Anthropic, model: string, req: AnalyzeRequest): Promise<Analysis> {
   const text = [
@@ -176,7 +178,7 @@ export async function analyze(client: Anthropic, model: string, req: AnalyzeRequ
     .filter(Boolean)
     .join('\n\n')
   const msg = await client.beta.messages.create({
-    ...fallback(),
+    ...fallback(model),
     model,
     max_tokens: 16000,
     system: ANALYZE_SYSTEM,
@@ -203,7 +205,7 @@ export async function analyze(client: Anthropic, model: string, req: AnalyzeRequ
 
 export async function coach(client: Anthropic, model: string, req: CoachRequest): Promise<{ reply: string }> {
   const msg = await client.beta.messages.create({
-    ...fallback(),
+    ...fallback(model),
     model,
     max_tokens: 16000,
     system: `${COACH_SYSTEM}\n\n<donnees>\n${req.context}\n</donnees>`,
