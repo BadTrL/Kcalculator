@@ -144,7 +144,7 @@ function AddToJournal({ menu, onClose }: { menu: Menu; onClose: (msg?: string) =
   const [date, setDate] = useState(() => iso(new Date()))
   const [spread, setSpread] = useState(false)
   const days = portions > 1 && spread ? portions : 1
-  const meals = useStore((s) => dayMeals(s, date))
+  const meals = useStore((s) => dayMeals(s, date), [date])
   const [meal, setMeal] = useState<Meal>(() => guessMeal(meals.length))
   return (
     <div className="modal" role="dialog" aria-label="Ajouter au journal">

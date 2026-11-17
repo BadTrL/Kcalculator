@@ -65,7 +65,7 @@ function History({ current, onOpen, onClose }: { current: string; onOpen: (id: s
 export function Coach() {
   // On rouvre la dernière discussion ; « Nouvelle discussion » en démarre une autre.
   const [chatId, setChatId] = useState(() => activeChats(getState())[0]?.id ?? newId())
-  const chat = useStore((s) => s.chats[chatId])
+  const chat = useStore((s) => s.chats[chatId], [chatId])
   const messages: CoachMessage[] = chat && !chat.deleted ? chat.messages : []
   const count = useStore((s) => activeChats(s).length)
   const [text, setText] = useState('')

@@ -21,7 +21,7 @@ type Image = Awaited<ReturnType<typeof prepareImage>>
  */
 export function PhotoMeal({ date, meal: initialMeal, onClose }: { date: string; meal: Meal; onClose: (msg?: string) => void }) {
   const [meal, setMeal] = useState<Meal>(initialMeal)
-  const dayList = useStore((s) => dayMeals(s, date))
+  const dayList = useStore((s) => dayMeals(s, date), [date])
   const meals = dayList.includes(initialMeal) ? dayList : [...dayList, initialMeal].sort((a, b) => a - b)
   const [image, setImage] = useState<Image | null>(null)
   const [note, setNote] = useState('')

@@ -168,10 +168,14 @@ function subscribe(l: () => void) {
   return () => listeners.delete(l)
 }
 
-export function useStore<T>(sel: (s: State) => T): T {
+/**
+ * Lit une partie de l'état. Le résultat n'est recalculé que si l'état change, ou si une valeur de `deps` change :
+ * un sélecteur qui dépend d'une variable du composant (id, date…) doit la passer dans `deps`.
+ */
+export function useStore<T>(sel: (s: State) => T, deps: unknown[] = []): T {
   const s = useSyncExternalStore(subscribe, getState)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(() => sel(s), [s])
+  return useMemo(() => sel(s), [s, ...deps])
 }
 
 const now = () => new Date().toISOString()

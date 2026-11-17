@@ -140,7 +140,7 @@ function MenuChooser({ meal, date, onClose }: { meal: Meal; date: string; onClos
 
 /** Heure facultative d'un repas, enregistrée et synchronisée. */
 function MealTime({ date, meal }: { date: string; meal: Meal }) {
-  const time = useStore((s) => mealTime(s, date, meal))
+  const time = useStore((s) => mealTime(s, date, meal), [date, meal])
   const label = `Heure du ${mealLabel(meal).toLowerCase()}`
   return (
     <span className={'meal-time' + (time ? ' set' : '')}>
