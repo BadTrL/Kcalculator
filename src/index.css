@@ -386,3 +386,11 @@ label.check input { width: auto; }
 .proposal-head { display: flex; flex-direction: column; }
 .proposal button { align-self: flex-start; }
 .proposal-done { color: var(--accent-text); font-weight: 600; }
+
+/* Petit point sous le jour actuel (bandeau de la semaine et calendrier) */
+.week .day.today::after, .cal-day.today::after {
+  content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex: none;
+}
+.week .day { gap: 4px; }
+.week .day.today.cur::after { background: var(--on-ink); }
+.cal-day.today::after { margin-top: 1px; }
