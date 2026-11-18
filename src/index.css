@@ -146,6 +146,10 @@ input, select, textarea {
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 @media (max-width: 400px) { .grid4 { grid-template-columns: 1fr 1fr; } }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+@media (max-width: 400px) { .grid3 { grid-template-columns: 1fr 1fr; } }
+details.micros { margin: 4px 0 8px; }
+details.micros > summary { cursor: pointer; font-weight: 600; padding: 6px 0; }
 .row { display: flex; gap: 8px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
 .row.end { justify-content: flex-end; }
 .row input { flex: 1; }
@@ -208,6 +212,13 @@ form .macros { justify-content: flex-start; margin: 8px 0; font-size: 1.05rem; }
 }
 .ring strong { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
 .bars { flex: 1; min-width: 0; }
+.micro-row { margin: 8px 0 0; line-height: 1.5; }
+.card.health .health-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.card.health h3 { margin: 0 0 10px; }
+.health-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.health-grid > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.health-grid strong { font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+.card.health > p { margin: 10px 0 0; }
 .bars > p { margin: 0 0 8px; font-size: 0.85rem; font-weight: 600; }
 .bars > p.muted { color: var(--accent-text); }
 .bar { margin: 8px 0; }

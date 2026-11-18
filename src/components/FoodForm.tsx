@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { deleteFood, newId, saveFood } from '../lib/store'
 import { lookupBarcode } from '../lib/off'
+import { MICROS, type MicroKey } from '../lib/micros'
 import type { Diet, Food, Unit } from '../lib/types'
 import { LazyScanner as Scanner } from './LazyScanner'
 import { TabIcon } from './Icons'
@@ -17,6 +18,19 @@ const num = (s: string) => {
   return Number.isFinite(x) ? x : 0
 }
 
+/** Champ facultatif : vide = inconnu (null), pas zéro. */
+const optNum = (s: string) => {
+  if (!s.trim()) return null
+  const x = parseFloat(s.replace(',', '.'))
+  return Number.isFinite(x) ? x : null
+}
+
+const optStr = (v: number | null | undefined) => (typeof v === 'number' ? String(v) : '')
+
+function microStrings(src: Partial<Record<MicroKey, number | null>>): Record<MicroKey, string> {
+  return Object.fromEntries(MICROS.map(({ key }) => [key, optStr(src[key])])) as Record<MicroKey, string>
+}
+
 export function FoodForm({ initial, onClose }: Props) {
   const [f, setF] = useState({
     name: initial.name ?? '',
@@ -29,6 +43,8 @@ export function FoodForm({ initial, onClose }: Props) {
     barcode: initial.barcode ?? '',
     diet: (initial.diet ?? '') as Diet | '',
   })
+  const [micros, setMicros] = useState(() => microStrings(initial))
+  const [showMicros, setShowMicros] = useState(() => MICROS.some(({ key }) => typeof initial[key] === 'number'))
   const [scan, setScan] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value })
@@ -58,6 +74,8 @@ export function FoodForm({ initial, onClose }: Props) {
         kcal: String(p.kcal),
         diet: p.diet ?? x.diet,
       }))
+      setMicros(microStrings(p))
+      if (MICROS.some(({ key }) => p[key] !== null)) setShowMicros(true)
       setMsg('Valeurs récupérées. Vérifie-les avec l\'étiquette avant d\'enregistrer.')
     } catch {
       setF((x) => ({ ...x, barcode: code }))
@@ -79,6 +97,7 @@ export function FoodForm({ initial, onClose }: Props) {
       kcal: num(f.kcal) || Math.round(theo),
       barcode: f.barcode.trim() || null,
       diet: f.diet || null,
+      ...(Object.fromEntries(MICROS.map(({ key }) => [key, optNum(micros[key])])) as Record<MicroKey, number | null>),
     })
     onClose(saved)
   }
@@ -120,6 +139,18 @@ export function FoodForm({ initial, onClose }: Props) {
           Valeurs {per}. Kcal théoriques d'après les macros : {Math.round(theo)}
           {gap && ' (écart important, vérifie les valeurs)'}
         </p>
+        <details className="micros" open={showMicros} onToggle={(e) => setShowMicros((e.target as HTMLDetailsElement).open)}>
+          <summary>Micronutriments (facultatif)</summary>
+          <div className="grid3">
+            {MICROS.map(({ key, label, unit }) => (
+              <label key={key}>
+                {label} ({unit})
+                <input inputMode="decimal" value={micros[key]} onChange={(e) => setMicros({ ...micros, [key]: e.target.value })} placeholder="?" />
+              </label>
+            ))}
+          </div>
+          <p className="muted small">Valeurs {per}. Laisse vide si tu ne sais pas : une case vide compte comme inconnue, pas comme zéro.</p>
+        </details>
         <label>
           Régime
           <select value={f.diet} onChange={set('diet')}>
