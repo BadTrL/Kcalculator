@@ -124,8 +124,34 @@ export function analyzePhoto(image: { data: string; mediaType: string }, note: s
   return callAi<Analysis>({ action: 'analyze', image: image.data, mediaType: image.mediaType, note, context })
 }
 
-export async function askCoach(messages: CoachMessage[], context: string) {
-  return (await callAi<{ reply: string }>({ action: 'coach', messages, context })).reply
+/** Proposition telle que renvoyée par la fonction : ref = numéro dans la liste d'aliments envoyée. */
+export interface RawProposal {
+  kind: 'journal' | 'menu'
+  name: string
+  date?: string
+  meal?: number
+  portions?: number
+  items: MenuDraftItem[]
+  comment: string
+}
+
+/** Texte envoyé à l'IA pour un message : on y résume les propositions, pour qu'elle sache ce qu'elle a proposé. */
+export function apiContent(m: CoachMessage): string {
+  const notes = (m.proposals ?? []).map((p) => {
+    const what = p.kind === 'journal' ? `ajouter « ${p.name} » au repas ${p.meal} du ${p.date}` : `enregistrer le menu « ${p.name} »`
+    return `[Proposition : ${what} : ${p.done ? 'confirmée' : 'pas encore confirmée'}]`
+  })
+  return [m.content, ...notes].filter(Boolean).join('\n\n') || '…'
+}
+
+export async function askCoach(messages: CoachMessage[], context: string, foods: string) {
+  const res = await callAi<{ reply: string; proposals?: RawProposal[] }>({
+    action: 'coach',
+    messages: messages.map((m) => ({ role: m.role, content: apiContent(m) })),
+    context,
+    foods,
+  })
+  return { reply: res.reply, proposals: res.proposals ?? [] }
 }
 
 /** Menu proposé par l'IA à partir d'une demande écrite et/ou d'une image. */

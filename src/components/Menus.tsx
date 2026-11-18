@@ -259,9 +259,9 @@ export function Menus() {
       {edit && <MenuEditor menu={edit} onClose={() => setEdit(null)} />}
       {ai && (
         <AiMenu
-          onClose={(saved) => {
+          onClose={(done) => {
             setAi(false)
-            if (saved) setMsg(`Menu « ${saved.name} » créé. Touche-le pour le modifier.`)
+            if (done) setMsg(`${done} Touche-le pour le modifier.`)
           }}
         />
       )}

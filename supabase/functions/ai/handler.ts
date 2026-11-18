@@ -29,6 +29,22 @@ export interface CoachRequest {
   action: 'coach'
   messages: CoachMessage[]
   context: string
+  /** Aliments enregistrés, une ligne « [n] nom – kcal / 100 g » (pour les outils du coach). */
+  foods?: string
+}
+
+/**
+ * Proposition faite par le coach avec un de ses outils : un repas à ajouter au journal, ou un menu à enregistrer.
+ * Rien n'est écrit côté serveur : l'appli montre la proposition et la personne la confirme (ou la modifie).
+ */
+export interface CoachProposal {
+  kind: 'journal' | 'menu'
+  name: string
+  date?: string // journal : AAAA-MM-JJ
+  meal?: number // journal : numéro du repas (1, 2…)
+  portions?: number // menu : batch cooking
+  items: MenuDraftItem[]
+  comment: string
 }
 
 /** Création d'un menu à partir d'une demande écrite et/ou d'une image (recette, carte, plat, liste de courses). */
@@ -141,6 +157,48 @@ const MENU_SCHEMA = {
   },
 } as const
 
+const ITEMS_SCHEMA = MENU_SCHEMA.properties.items
+
+/** Outils du coach : il propose, la personne confirme dans l'appli. */
+const COACH_TOOLS = [
+  {
+    name: 'proposer_repas_journal',
+    description:
+      "Propose d'ajouter un repas (des aliments et leurs quantités) au journal de la personne, à une date et un numéro de repas. " +
+      "Utilise cet outil dès qu'elle te demande de noter, d'enregistrer ou d'ajouter ce qu'elle a mangé ou va manger. " +
+      "Elle verra la proposition, pourra la corriger, et devra la confirmer : rien n'est écrit sans son accord.",
+    input_schema: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['date', 'meal', 'name', 'items', 'comment'],
+      properties: {
+        date: { type: 'string', description: 'Date AAAA-MM-JJ (celle du jour si elle ne précise pas).' },
+        meal: { type: 'integer', description: 'Numéro du repas dans la journée : 1, 2, 3… (prends le prochain repas vide si elle ne précise pas).' },
+        name: { type: 'string', description: 'Titre court du repas.' },
+        items: { ...ITEMS_SCHEMA, description: 'Aliments du repas avec la quantité mangée.' },
+        comment: { type: 'string', description: 'Une phrase facultative (peut être vide).' },
+      },
+    },
+  },
+  {
+    name: 'proposer_menu',
+    description:
+      "Propose d'enregistrer un menu réutilisable dans « Mes menus » (une recette ou un repas type, éventuellement en batch cooking). " +
+      'Utilise cet outil quand elle te demande de créer, sauvegarder ou composer un menu. Elle confirmera avant enregistrement.',
+    input_schema: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['name', 'portions', 'items', 'comment'],
+      properties: {
+        name: MENU_SCHEMA.properties.name,
+        portions: MENU_SCHEMA.properties.portions,
+        items: ITEMS_SCHEMA,
+        comment: MENU_SCHEMA.properties.comment,
+      },
+    },
+  },
+] as const
+
 const MENU_SYSTEM = `Tu composes des menus (repas) pour une appli de suivi des calories et des macros. Réponds en français, tutoiement.
 La personne décrit ce qu'elle veut (texte) et/ou envoie une image : recette, plat, carte de restaurant, liste de courses, contenu du frigo…
 Propose UN menu réaliste avec ses ingrédients et leurs quantités en grammes (ou ml, ou unités pour les œufs, tranches…).
@@ -160,6 +218,7 @@ const COACH_SYSTEM = `Tu es le coach nutrition de l'appli Kcalculator. Tu tutoie
 Tu t'appuies sur ses données réelles (fournies ci-dessous) : objectif, cibles caloriques et macros, journal des derniers jours.
 Sois concret et bref : quelques phrases ou une courte liste, avec des chiffres tirés de ses données quand c'est utile. Tu peux mettre en forme en Markdown simple (gras, listes, titres courts), sans tableau. Propose des ajustements réalistes (aliments, portions, timing), sans culpabiliser.
 Un écart ponctuel (cheat meal) n'annule pas une semaine régulière : replace-le dans la moyenne de la semaine.
+Tu as deux outils pour agir dans l'appli : proposer_repas_journal (noter un repas dans son journal) et proposer_menu (enregistrer un menu). Quand elle te demande d'ajouter, noter, enregistrer ou créer un repas ou un menu, utilise l'outil au lieu de lui dire de le faire elle-même. Utilise en priorité ses aliments enregistrés (numéro [n] dans ref, avec leur unité) ; sinon ref = 0 et estime les valeurs (références type Ciqual). Accompagne l'outil d'une phrase courte ; elle confirmera dans l'appli.
 Tu n'es pas médecin : pour un problème de santé, une grossesse, un trouble du comportement alimentaire ou un régime très restrictif, recommande un professionnel de santé.`
 
 function str(v: unknown, max: number, field: string): string {
@@ -192,7 +251,12 @@ export function parseRequest(body: unknown): AiRequest {
     // L'API attend une conversation qui commence et se termine par l'utilisateur.
     while (messages.length && messages[0].role !== 'user') messages.shift()
     if (!messages.length || messages[messages.length - 1].role !== 'user') throw new BadRequest('Le dernier message doit venir de toi')
-    return { action: 'coach', messages, context: str(b.context ?? '', 12000, 'context') }
+    return {
+      action: 'coach',
+      messages,
+      context: str(b.context ?? '', 12000, 'context'),
+      ...(typeof b.foods === 'string' && b.foods ? { foods: b.foods.slice(0, 40000) } : {}),
+    }
   }
   if (b.action === 'menu') {
     const prompt = typeof b.prompt === 'string' ? b.prompt.slice(0, 2000) : ''
@@ -261,6 +325,18 @@ export function cleanMenu(raw: unknown, maxRef: number): MenuDraft {
   return { name: String(m.name ?? 'Menu').trim().slice(0, 80) || 'Menu', portions, items, comment: String(m.comment ?? '').trim() }
 }
 
+/** Nettoie une proposition faite avec un outil du coach. Renvoie null si elle est inutilisable. */
+export function cleanProposal(name: string, input: unknown, maxRef: number, today: string): CoachProposal | null {
+  const x = (input ?? {}) as Record<string, unknown>
+  if (name !== 'proposer_repas_journal' && name !== 'proposer_menu') return null
+  const m = cleanMenu({ name: x.name, portions: x.portions, items: x.items, comment: x.comment }, maxRef)
+  if (!m.items.length) return null
+  if (name === 'proposer_menu') return { kind: 'menu', name: m.name, portions: m.portions, items: m.items, comment: m.comment }
+  const date = typeof x.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x.date) ? x.date : today
+  const meal = Math.min(12, Math.max(1, Math.round(Number(x.meal)) || 1))
+  return { kind: 'journal', name: m.name, date, meal, items: m.items, comment: m.comment }
+}
+
 function textOf(msg: Anthropic.Beta.BetaMessage) {
   return msg.content
     .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text')
@@ -311,17 +387,28 @@ export async function analyze(client: Anthropic, model: string, req: AnalyzeRequ
   return cleanAnalysis(parsed)
 }
 
-export async function coach(client: Anthropic, model: string, req: CoachRequest): Promise<{ reply: string }> {
+export async function coach(client: Anthropic, model: string, req: CoachRequest): Promise<{ reply: string; proposals: CoachProposal[] }> {
+  const foods = req.foods ?? ''
+  const maxRef = (foods.match(/^\[\d+\]/gm) ?? []).length
+  const today = /Date du jour : (\d{4}-\d{2}-\d{2})/.exec(req.context)?.[1] ?? new Date().toISOString().slice(0, 10)
+  const data = foods ? `${req.context}\n\nSes aliments enregistrés (valeurs pour 100 g / 100 ml, ou pour 1 unité si « / u ») :\n${foods}` : req.context
   const msg = await client.beta.messages.create({
     ...fallback(model),
     model,
     max_tokens: 16000,
-    system: `${COACH_SYSTEM}\n\n<donnees>\n${req.context}\n</donnees>`,
+    system: `${COACH_SYSTEM}\n\n<donnees>\n${data}\n</donnees>`,
     output_config: { effort: 'low' },
+    tools: COACH_TOOLS as unknown as Anthropic.Beta.BetaToolUnion[],
     messages: req.messages,
   })
   checkStop(msg)
-  return { reply: textOf(msg).trim() }
+  const proposals = msg.content
+    .filter((b): b is Anthropic.Beta.BetaToolUseBlock => b.type === 'tool_use')
+    .map((b) => cleanProposal(b.name, b.input, maxRef, today))
+    .filter((p): p is CoachProposal => p !== null)
+  let reply = textOf(msg).trim()
+  if (!reply && proposals.length) reply = 'Voici ma proposition, vérifie-la avant de confirmer :'
+  return { reply, proposals }
 }
 
 export async function menu(client: Anthropic, model: string, req: MenuRequest): Promise<MenuDraft> {

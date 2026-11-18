@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BadRequest, cleanAnalysis, cleanMenu, parseRequest } from './handler'
+import { BadRequest, cleanAnalysis, cleanMenu, cleanProposal, parseRequest } from './handler'
 
 describe('parseRequest', () => {
   it('accepte une analyse de photo', () => {
@@ -69,5 +69,22 @@ describe('menu', () => {
     expect(m.items).toHaveLength(2)
     expect(m.items[0].ref).toBe(2)
     expect(m.items[1]).toMatchObject({ ref: 0, unit: 'g' })
+  })
+})
+
+describe('cleanProposal', () => {
+  const items = [{ name: 'Riz', ref: 1, qty: 80, unit: 'g', kcal: 280, protein: 6, carbs: 62, fat: 1 }]
+  it('garde un repas pour le journal avec sa date et son numéro', () => {
+    const p = cleanProposal('proposer_repas_journal', { date: '2026-11-18', meal: 2, name: 'Midi', items, comment: '' }, 1, '2026-11-17')
+    expect(p).toMatchObject({ kind: 'journal', date: '2026-11-18', meal: 2, name: 'Midi' })
+    expect(p?.items[0].ref).toBe(1)
+  })
+  it('remplace une date invalide par celle du jour', () => {
+    expect(cleanProposal('proposer_repas_journal', { date: 'demain', meal: 0, name: 'x', items }, 1, '2026-11-17')).toMatchObject({ date: '2026-11-17', meal: 1 })
+  })
+  it('garde un menu et refuse un outil inconnu ou vide', () => {
+    expect(cleanProposal('proposer_menu', { name: 'Bowl', portions: 3, items, comment: '' }, 1, '2026-11-17')).toMatchObject({ kind: 'menu', portions: 3 })
+    expect(cleanProposal('effacer_tout', { items }, 1, '2026-11-17')).toBeNull()
+    expect(cleanProposal('proposer_menu', { name: 'Vide', items: [] }, 1, '2026-11-17')).toBeNull()
   })
 })

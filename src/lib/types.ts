@@ -80,10 +80,38 @@ export interface MenuItem {
   qty: number
 }
 
+/** Ingrédient proposé par l'IA : un aliment de Mes aliments (food_id) ou un nouvel aliment estimé (food_id null). */
+export interface ProposalItem {
+  name: string
+  food_id: string | null
+  qty: number
+  unit: Unit
+  /** Estimation de l'IA pour cette quantité (sert pour un nouvel aliment). */
+  kcal: number
+  protein: number
+  carbs: number
+  fat: number
+}
+
+/** Proposition du coach (outil) : un repas à ajouter au journal ou un menu à enregistrer, à confirmer. */
+export interface CoachProposal {
+  kind: 'journal' | 'menu'
+  name: string
+  date?: string
+  meal?: Meal
+  portions?: number
+  items: ProposalItem[]
+  comment?: string
+  /** Rempli une fois la proposition confirmée (ex. « Ajouté au repas 2 du 18 nov. »). */
+  done?: string
+}
+
 /** Un message d'une discussion avec le coach. */
 export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
+  /** Propositions du coach attachées à sa réponse. */
+  proposals?: CoachProposal[]
 }
 
 /** Discussion avec le coach IA, gardée dans l'historique et synchronisée. */

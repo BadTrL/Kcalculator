@@ -371,7 +371,7 @@ label.check input { width: auto; }
 
 /* Coach : historique et création de menu */
 .coach-head { flex-wrap: wrap; }
-.coach-head h3 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0; }
+.coach-head h3 { flex: 1 1 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0; }
 .coach-actions { display: flex; gap: 4px; flex-wrap: wrap; }
 .coach-menu { width: 100%; margin: 4px 0 8px; }
 .chat-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -379,3 +379,10 @@ label.check input { width: auto; }
 .chat-list li strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chat-list li.on { outline: 2px solid var(--accent-soft); }
 .sheet textarea { background: var(--bg); width: 100%; resize: vertical; }
+
+/* Proposition du coach (repas à noter ou menu à enregistrer), à confirmer */
+.proposal { margin-top: 10px; padding: 12px; border-radius: 16px; background: var(--card); white-space: normal; display: flex; flex-direction: column; gap: 6px; }
+.proposal p { margin: 0; }
+.proposal-head { display: flex; flex-direction: column; }
+.proposal button { align-self: flex-start; }
+.proposal-done { color: var(--accent-text); font-weight: 600; }
