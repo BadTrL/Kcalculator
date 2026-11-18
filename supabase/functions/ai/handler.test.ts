@@ -81,6 +81,8 @@ describe('cleanProposal', () => {
   })
   it('remplace une date invalide par celle du jour', () => {
     expect(cleanProposal('proposer_repas_journal', { date: 'demain', meal: 0, name: 'x', items }, 1, '2026-11-17')).toMatchObject({ date: '2026-11-17', meal: 1 })
+    expect(cleanProposal('proposer_repas_journal', { date: '2026-11-15', meal: 3, time: '19h', name: 'x', items }, 1, '2026-11-17')).toMatchObject({ time: '19:00' })
+    expect(cleanProposal('proposer_repas_journal', { date: '2026-11-15', meal: 3, time: '', name: 'x', items }, 1, '2026-11-17')?.time).toBeUndefined()
   })
   it('garde un menu et refuse un outil inconnu ou vide', () => {
     expect(cleanProposal('proposer_menu', { name: 'Bowl', portions: 3, items, comment: '' }, 1, '2026-11-17')).toMatchObject({ kind: 'menu', portions: 3 })

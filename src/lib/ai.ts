@@ -130,6 +130,7 @@ export interface RawProposal {
   name: string
   date?: string
   meal?: number
+  time?: string
   portions?: number
   items: MenuDraftItem[]
   comment: string
@@ -138,7 +139,7 @@ export interface RawProposal {
 /** Texte envoyé à l'IA pour un message : on y résume les propositions, pour qu'elle sache ce qu'elle a proposé. */
 export function apiContent(m: CoachMessage): string {
   const notes = (m.proposals ?? []).map((p) => {
-    const what = p.kind === 'journal' ? `ajouter « ${p.name} » au repas ${p.meal} du ${p.date}` : `enregistrer le menu « ${p.name} »`
+    const what = p.kind === 'journal' ? `ajouter « ${p.name} » au repas ${p.meal} du ${p.date}${p.time ? ` à ${p.time}` : ''}` : `enregistrer le menu « ${p.name} »`
     return `[Proposition : ${what} : ${p.done ? 'confirmée' : 'pas encore confirmée'}]`
   })
   return [m.content, ...notes].filter(Boolean).join('\n\n') || '…'

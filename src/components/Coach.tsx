@@ -26,7 +26,7 @@ const fmtDay = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('fr-F
 /** Proposition du coach dans sa réponse : résumé, puis relecture et confirmation avant écriture. */
 function ProposalCard({ p, onOpen }: { p: CoachProposal; onOpen: () => void }) {
   const kcal = Math.round(p.items.reduce((t, it) => t + it.kcal, 0))
-  const where = p.kind === 'journal' ? `${mealLabel(p.meal ?? 1)} · ${fmtDay(p.date ?? '')}` : p.portions && p.portions > 1 ? `Menu · ${p.portions} repas` : 'Menu'
+  const where = p.kind === 'journal' ? `${mealLabel(p.meal ?? 1)} · ${fmtDay(p.date ?? '')}${p.time ? ` · ${p.time}` : ''}` : p.portions && p.portions > 1 ? `Menu · ${p.portions} repas` : 'Menu'
   return (
     <div className="proposal">
       <div className="proposal-head">

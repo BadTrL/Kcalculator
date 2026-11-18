@@ -42,6 +42,7 @@ export interface CoachProposal {
   name: string
   date?: string // journal : AAAA-MM-JJ
   meal?: number // journal : numéro du repas (1, 2…)
+  time?: string // journal : heure HH:MM, facultative
   portions?: number // menu : batch cooking
   items: MenuDraftItem[]
   comment: string
@@ -170,10 +171,11 @@ const COACH_TOOLS = [
     input_schema: {
       type: 'object',
       additionalProperties: false,
-      required: ['date', 'meal', 'name', 'items', 'comment'],
+      required: ['date', 'meal', 'time', 'name', 'items', 'comment'],
       properties: {
         date: { type: 'string', description: 'Date AAAA-MM-JJ (celle du jour si elle ne précise pas).' },
         meal: { type: 'integer', description: 'Numéro du repas dans la journée : 1, 2, 3… (prends le prochain repas vide si elle ne précise pas).' },
+        time: { type: 'string', description: "Heure du repas HH:MM si elle la donne (ex. « 19:00 »), sinon chaîne vide." },
         name: { type: 'string', description: 'Titre court du repas.' },
         items: { ...ITEMS_SCHEMA, description: 'Aliments du repas avec la quantité mangée.' },
         comment: { type: 'string', description: 'Une phrase facultative (peut être vide).' },
@@ -334,7 +336,9 @@ export function cleanProposal(name: string, input: unknown, maxRef: number, toda
   if (name === 'proposer_menu') return { kind: 'menu', name: m.name, portions: m.portions, items: m.items, comment: m.comment }
   const date = typeof x.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x.date) ? x.date : today
   const meal = Math.min(12, Math.max(1, Math.round(Number(x.meal)) || 1))
-  return { kind: 'journal', name: m.name, date, meal, items: m.items, comment: m.comment }
+  const t = typeof x.time === 'string' ? /^(\d{1,2})[:h](\d{2})?/.exec(x.time.trim()) : null
+  const time = t && +t[1] < 24 && +(t[2] ?? 0) < 60 ? `${t[1].padStart(2, '0')}:${t[2] ?? '00'}` : undefined
+  return { kind: 'journal', name: m.name, date, meal, ...(time ? { time } : {}), items: m.items, comment: m.comment }
 }
 
 function textOf(msg: Anthropic.Beta.BetaMessage) {

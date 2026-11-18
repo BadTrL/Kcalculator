@@ -99,6 +99,7 @@ export interface CoachProposal {
   name: string
   date?: string
   meal?: Meal
+  time?: string // HH:MM
   portions?: number
   items: ProposalItem[]
   comment?: string

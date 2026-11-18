@@ -3,7 +3,7 @@ import { draftMenu, prepareImage, type MenuDraft, type MenuDraftItem } from '../
 import { foodsForMenu, photoContext } from '../lib/aiContext'
 import { macrosFor, portionsOf, scaleMacros, sum } from '../lib/calc'
 import { iso } from '../lib/date'
-import { dayMeals, getState, newId, saveEntry, saveFood, saveMenu, useStore } from '../lib/store'
+import { dayMeals, getState, mealTime, newId, saveEntry, saveFood, saveMenu, setMealTime, useStore } from '../lib/store'
 import { mealLabel, type CoachProposal, type Food, type Macros, type Meal, type ProposalItem } from '../lib/types'
 import { MacroLine } from './Menus'
 import { TabIcon } from './Icons'
@@ -85,6 +85,7 @@ export function AiMenu({
   const [lines, setLines] = useState<Line[]>(() => (proposal ? toLines(proposal.items) : []))
   const [date, setDate] = useState(proposal?.date ?? iso(new Date()))
   const [meal, setMeal] = useState<Meal>(proposal?.meal ?? 1)
+  const [time, setTime] = useState(proposal?.time ?? '')
   const dayList = useStore((s) => dayMeals(s, date), [date])
   const mealChoices = Array.from(new Set([...dayList, dayList.length + 1, meal])).sort((a, b) => a - b)
   const portions = portionsOf({ portions: parseInt(portionsTxt, 10) })
@@ -136,7 +137,9 @@ export function AiMenu({
     })
     if (journal) {
       for (const it of items) saveEntry({ id: newId(), date, meal, food_id: it.food_id, qty: it.qty })
-      onClose(`Ajouté au ${mealLabel(meal).toLowerCase()} du ${fmtDate(date)} (${r(total.kcal)} kcal).`)
+      // L'heure n'écrase pas celle déjà notée pour ce repas.
+      if (time && !mealTime(getState(), date, meal)) setMealTime(date, meal, time)
+      onClose(`Ajouté au ${mealLabel(meal).toLowerCase()} du ${fmtDate(date)}${time ? ` à ${time}` : ''} (${r(total.kcal)} kcal).`)
       return
     }
     const m = saveMenu({ id: newId(), name: name.trim(), items, portions })
@@ -206,6 +209,10 @@ export function AiMenu({
                       </option>
                     ))}
                   </select>
+                </label>
+                <label>
+                  Heure (facultatif)
+                  <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
                 </label>
               </div>
             ) : (
