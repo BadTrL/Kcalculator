@@ -2,14 +2,15 @@ import { mealKey } from './meals'
 import { macrosFor, sum, targets } from './calc'
 import { average, dailyTotals } from './history'
 import { addDays } from './store'
-import { mealLabel, type Entry, type MealInfo, type Food, type Macros, type Profile } from './types'
+import { healthLine } from './health'
+import { mealLabel, type Entry, type MealInfo, type Food, type HealthDay, type Macros, type Profile } from './types'
 
 /**
  * Résumés texte des données envoyés à l'IA : juste ce qu'il faut pour un avis
  * personnalisé (objectifs, journal récent), sans identifiant ni compte.
  */
 
-type Data = { entries: Record<string, Entry>; foods: Record<string, Food>; profile: Profile; meals?: Record<string, MealInfo> }
+type Data = { entries: Record<string, Entry>; foods: Record<string, Food>; profile: Profile; meals?: Record<string, MealInfo>; health?: Record<string, HealthDay> }
 
 const r = (x: number) => Math.round(x)
 const line = (m: Macros) => `${r(m.kcal)} kcal, P ${r(m.protein)} g, G ${r(m.carbs)} g, L ${r(m.fat)} g`
@@ -61,6 +62,14 @@ export function coachContext(d: Data, today: string): string {
   for (const day of logged) out.push(`- ${day} : ${line(totals[day])}`)
   const avg7 = average(days.slice(-7).filter((day) => totals[day]).map((day) => totals[day]))
   if (avg7) out.push(`Moyenne des jours notés sur 7 jours : ${line(avg7)}.`)
+
+  // Données du bracelet (appli santé), quand il y en a.
+  const health = d.health ?? {}
+  const hdays = [...days, today].filter((day) => health[day] && healthLine(health[day]))
+  if (hdays.length) {
+    out.push('', 'Bracelet / appli santé (dépense mesurée, pas estimée) :')
+    for (const day of hdays) out.push(`- ${day}${day === today ? " (aujourd'hui, journée en cours)" : ''} : ${healthLine(health[day])}`)
+  }
   return out.join('\n')
 }
 

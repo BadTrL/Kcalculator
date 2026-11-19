@@ -11,6 +11,9 @@ import { TabIcon } from './Icons'
 import { dailyTotals, level, weekOf } from '../lib/history'
 import { CheatToggle, ProgressCard, ProgressSheet } from './Progress'
 import { PhotoMeal } from './PhotoMeal'
+import { MICROS, microsFor, sumMicros, type Micros } from '../lib/micros'
+import { burned, sleepLabel } from '../lib/health'
+import type { HealthDay } from '../lib/types'
 
 const r = (x: number) => Math.round(x)
 const qtyUnit = (f: Food) => (f.unit === 'u' ? 'u' : f.unit)
@@ -60,7 +63,7 @@ function Bar({ label, value, target, cls }: { label: string; value: number; targ
   )
 }
 
-function Summary({ total, target }: { total: Macros; target: Macros }) {
+function Summary({ total, target, micros }: { total: Macros; target: Macros; micros: Micros[] }) {
   const left = target.kcal - total.kcal
   const pct = Math.min(1, total.kcal / target.kcal)
   return (
@@ -76,7 +79,69 @@ function Summary({ total, target }: { total: Macros; target: Macros }) {
         <Bar label="Protéines" value={total.protein} target={target.protein} cls="p" />
         <Bar label="Glucides" value={total.carbs} target={target.carbs} cls="c" />
         <Bar label="Lipides" value={total.fat} target={target.fat} cls="f" />
+        <MicroRow list={micros} />
       </div>
+    </div>
+  )
+}
+
+/** Micronutriments du jour. « ≥ » quand un aliment ne les renseigne pas (total incomplet). */
+function MicroRow({ list }: { list: Micros[] }) {
+  const { total, partial, known } = sumMicros(list)
+  const shown = MICROS.filter(({ key }) => known[key])
+  if (!shown.length) return null
+  const fmt = (v: number, unit: string) => (unit === 'mg' && v >= 1000 ? `${(v / 1000).toFixed(1).replace('.', ',')} g` : `${unit === 'g' ? v.toFixed(1).replace('.', ',') : r(v)} ${unit}`)
+  return (
+    <div className="micro-row muted small">
+      {shown.map(({ key, label, unit }, i) => (
+        <span key={key}>
+          {i > 0 && ' · '}
+          {label} {partial[key] ? '≥ ' : ''}
+          {fmt(total[key], unit)}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+/** Bilan « mangé / dépensé » avec les données du bracelet (appli santé). */
+function HealthCard({ eaten, health, isToday }: { eaten: number; health: HealthDay; isToday: boolean }) {
+  const out = burned(health)
+  const bal = out === null ? null : eaten - out
+  return (
+    <div className="card health">
+      <div className="health-head">
+        <h3>Bilan du jour</h3>
+        <span className="muted small">{isToday ? 'journée en cours' : 'bracelet'}</span>
+      </div>
+      <div className="health-grid">
+        <div>
+          <span className="muted small">Mangé</span>
+          <strong>{r(eaten)} kcal</strong>
+        </div>
+        <div>
+          <span className="muted small">Dépensé</span>
+          <strong>{out === null ? '–' : `${r(out)} kcal`}</strong>
+          {typeof health.active_kcal === 'number' && <span className="muted small">dont {r(health.active_kcal)} actives</span>}
+        </div>
+        <div>
+          <span className="muted small">Solde</span>
+          <strong className={bal === null ? '' : bal > 0 ? 'over-text' : ''}>{bal === null ? '–' : `${bal > 0 ? '+' : ''}${r(bal)} kcal`}</strong>
+          {bal !== null && <span className="muted small">{bal > 0 ? 'surplus' : 'déficit'}</span>}
+        </div>
+      </div>
+      {(typeof health.sleep_min === 'number' || typeof health.hrv_ms === 'number' || typeof health.steps === 'number') && (
+        <p className="muted small">
+          {[
+            typeof health.sleep_min === 'number' ? `Sommeil ${sleepLabel(health.sleep_min)}` : null,
+            typeof health.hrv_ms === 'number' ? `HRV ${r(health.hrv_ms)} ms` : null,
+            typeof health.resting_hr === 'number' ? `FC repos ${r(health.resting_hr)}` : null,
+            typeof health.steps === 'number' ? `${r(health.steps)} pas` : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+      )}
     </div>
   )
 }
@@ -180,6 +245,7 @@ export function Today() {
   const foods = useStore((s) => s.foods)
   const profile = useStore((s) => s.profile)
   const mealInfos = useStore((s) => s.meals)
+  const health = useStore((s) => s.health?.[date], [date])
   const target = useMemo(() => targets(profile), [profile])
   // Nombre de repas demandé à la main pour ce jour (« + Ajouter un repas »), tant qu'ils restent vides.
   const [extra, setExtra] = useState({ date, n: 0 })
@@ -202,6 +268,7 @@ export function Today() {
   }, [entries, foods, date, mealInfos, extraN])
 
   const total = sum(meals.flatMap((m) => byMeal(m).map((x) => x.m)))
+  const dayMicros = meals.flatMap((m) => byMeal(m).map((x) => microsFor(x.f, x.e.qty)))
   const shift = (d: number) => setDate(shiftIso(date, d))
   const today = iso(new Date())
   const long = new Date(date + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -218,7 +285,8 @@ export function Today() {
         <button className="icon-btn" onClick={() => setCalendar(true)} aria-label="Ouvrir le calendrier"><TabIcon id="today" size={20} /></button>
       </div>
       <WeekStrip date={date} today={today} target={target.kcal} onPick={setDate} onShift={shift} />
-      <Summary total={total} target={target} />
+      <Summary total={total} target={target} micros={dayMicros} />
+      {health && <HealthCard eaten={total.kcal} health={health} isToday={date === today} />}
       <ProgressCard date={date} onOpen={() => setProgress(true)} />
       {meals.map((meal) => {
         const rows = byMeal(meal)

@@ -3,7 +3,7 @@ import seed from '../data/seedFoods.json'
 import { portionQty } from './calc'
 import { iso } from './date'
 import { mealKey, mealsOfDay, normalizeCheatKeys, normalizeTime, toMeal } from './meals'
-import type { Chat, ChatMessage, Diet, Entry, Food, Meal, MealInfo, Menu, MenuItem, Profile, Unit } from './types'
+import type { Chat, ChatMessage, Diet, Entry, Food, HealthDay, Meal, MealInfo, Menu, MenuItem, Profile, Unit } from './types'
 
 /**
  * Stockage local d'abord : tout est enregistré sur l'appareil (localStorage),
@@ -20,6 +20,10 @@ export interface State {
   /** Discussions avec le coach (historique). */
   chats: Record<string, Chat>
   profile: Profile
+  /** Résumés santé par jour (calories dépensées, sommeil…), reçus de l'appli santé. Lecture seule. */
+  health: Record<string, HealthDay>
+  /** Repère de synchro propre aux résumés santé (heure serveur). */
+  healthSync: string | null
   dirty: { foods: string[]; entries: string[]; menus: string[]; meals: string[]; chats: string[]; profile: boolean }
   lastSync: string | null
 }
@@ -105,6 +109,8 @@ function initial(): State {
     meals: {},
     chats: {},
     profile: defaultProfile,
+    health: {},
+    healthSync: null,
     dirty: { foods: Object.keys(foods), entries: [], menus: [], meals: [], chats: [], profile: true },
     lastSync: null,
   }

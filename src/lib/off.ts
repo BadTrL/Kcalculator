@@ -8,6 +8,13 @@ export interface OffProduct {
   fat: number
   kcal: number
   diet: 'vege' | 'vegan' | null
+  // Micronutriments pour 100 g / 100 ml, null si Open Food Facts ne les donne pas.
+  fibre: number | null
+  sugar: number | null
+  sat_fat: number | null
+  sodium: number | null // mg
+  iron: number | null // mg
+  calcium: number | null // mg
 }
 
 /** Résultat d'une recherche par nom : un produit avec son code-barres. */
@@ -28,6 +35,13 @@ const n = (v: unknown) => {
   return Number.isFinite(x) ? Math.round(x * 100) / 100 : 0
 }
 
+/** Valeur facultative : null si absente (inconnu ≠ zéro). `k` convertit l'unité (g → mg = 1000). */
+const opt = (v: unknown, k = 1) => {
+  if (v === undefined || v === null || v === '') return null
+  const x = typeof v === 'string' ? parseFloat(v) : (v as number)
+  return Number.isFinite(x) ? Math.round(x * k * 100) / 100 : null
+}
+
 const FIELDS = 'code,product_name,product_name_fr,brands,nutriments,quantity,ingredients_analysis_tags'
 
 /** Convertit un produit Open Food Facts au format des aliments de l'appli (valeurs pour 100 g / 100 ml). */
@@ -45,6 +59,13 @@ export function parseOff(p: Record<string, unknown>, code = ''): OffProduct {
     fat: n(nu.fat_100g),
     kcal,
     diet: dietFrom(p.ingredients_analysis_tags),
+    fibre: opt(nu.fiber_100g),
+    sugar: opt(nu.sugars_100g),
+    sat_fat: opt(nu['saturated-fat_100g']),
+    // Open Food Facts donne sodium, fer et calcium en g pour 100 g.
+    sodium: opt(nu.sodium_100g, 1000),
+    iron: opt(nu.iron_100g, 1000),
+    calcium: opt(nu.calcium_100g, 1000),
   }
 }
 

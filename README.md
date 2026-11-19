@@ -80,6 +80,14 @@ La même fonction relaie aussi la **recherche par nom dans Open Food Facts** (ch
 
 L'historique des discussions avec le coach est synchronisé entre tes appareils une fois `supabase/migrations/005_historique_coach.sql` lancé (sinon il reste sur l'appareil).
 
+### Micronutriments et appli santé (HealthE)
+
+`supabase/migrations/006_sante_micros.sql` ajoute :
+
+- les micronutriments des aliments (fibres, sucres, AG saturés, sodium, fer, calcium), remplis par le scan Open Food Facts ou à la main ;
+- la vue `nutrition_daily` : le total nutritionnel de chaque jour, que l'appli santé lit (une ligne par jour) ;
+- la table `health_daily` : le résumé santé de chaque jour (calories dépensées, sommeil, HRV…) écrit par l'appli santé. Kcalculator l'affiche dans le bilan du Journal et l'envoie au coach.
+
 La clé est traitée comme un mot de passe : champ masqué, chiffrée par Supabase Vault, propre à ton compte. L'appli peut la remplacer ou la supprimer mais ne peut plus la relire (elle affiche seulement ses 4 derniers caractères) ; seule la fonction « ai » la déchiffre.
 
 Variante sans saisie dans l'appli : une clé partagée en secret Supabase, utilisée pour les comptes qui n'ont pas enregistré la leur.

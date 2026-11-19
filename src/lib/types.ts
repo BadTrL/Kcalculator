@@ -15,8 +15,30 @@ export interface Food {
   barcode?: string | null
   brand?: string | null
   diet?: Diet | null // null = contient de la viande / du poisson, ou non renseigné
+  // Micronutriments, mêmes unités de référence (100 g / 100 ml / 1 unité). null ou absent = inconnu (pas zéro).
+  fibre?: number | null // g
+  sugar?: number | null // g
+  sat_fat?: number | null // g
+  sodium?: number | null // mg
+  iron?: number | null // mg
+  calcium?: number | null // mg
   updated_at: string
   deleted?: boolean
+}
+
+/** Résumé santé d'une journée, envoyé par l'appli santé (HealthE / Edge) dans Supabase. Lecture seule ici. */
+export interface HealthDay {
+  date: string // YYYY-MM-DD
+  source: string // ex. « healthe:whoop5 »
+  active_kcal: number | null
+  total_kcal: number | null
+  steps: number | null
+  sleep_min: number | null
+  hrv_ms: number | null
+  resting_hr: number | null
+  weight_kg: number | null
+  body_fat_pct: number | null // 0..100
+  updated_at: string
 }
 
 /** Numéro du repas dans la journée : 1, 2, 3… */
